@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-head row-between">
+  <div>
+    <h1>Historie synchronizace</h1>
+    <p class="muted">Přehled posledních běhů RSS syncu.</p>
+  </div>
+  <form method="post" action="/admin/sync/run">
+    <button class="button primary" type="submit">Spustit sync ručně</button>
+  </form>
+</section>
+
+<section class="card">
+  {% if runs %}
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Začátek</th>
+          <th>Stav</th>
+          <th>Zdroje</th>
+          <th>Vloženo článků</th>
+          <th>Spuštěno</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for run in runs %}
+          <tr>
+            <td>{{ run.started_at.strftime("%d.%m.%Y %H:%M") }}</td>
+            <td>{{ run.status }}</td>
+            <td>{{ run.sources_ok }} / {{ run.sources_total }}</td>
+            <td>{{ run.articles_created }}</td>
+            <td>{{ run.triggered_by }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>Zatím neproběhl žádný sync.</p>
+  {% endif %}
+</section>
+{% endblock %}

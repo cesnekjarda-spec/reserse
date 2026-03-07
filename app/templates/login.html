@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="auth-wrap">
+  <form class="card form-card" method="post" action="/login">
+    <h1>Přihlášení</h1>
+    {% if error %}<div class="alert">{{ error }}</div>{% endif %}
+    <label>E-mail</label>
+    <input type="email" name="email" required>
+    <label>Heslo</label>
+    <input type="password" name="password" required>
+    <button class="button primary" type="submit">Přihlásit</button>
+  </form>
+</section>
+{% endblock %}

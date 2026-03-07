@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-head row-between">
+  <div>
+    <h1>Zdroje</h1>
+    <p class="muted">Přidávej RSS feedy do okruhů.</p>
+  </div>
+  <a class="button primary" href="/admin/sources/new">Nový zdroj</a>
+</section>
+
+<section class="card">
+  {% if sources %}
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Název</th>
+          <th>Okruh</th>
+          <th>RSS</th>
+          <th>Aktivní</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for source in sources %}
+          <tr>
+            <td>{{ source.name }}</td>
+            <td>{{ source.topic.name }}</td>
+            <td class="small-text">{{ source.rss_url }}</td>
+            <td>{{ "ano" if source.is_active else "ne" }}</td>
+            <td><a href="/admin/sources/{{ source.id }}/edit">Upravit</a></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>Zatím není přidán žádný zdroj.</p>
+  {% endif %}
+</section>
+{% endblock %}

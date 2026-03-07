@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-head">
+  <h1>Uživatelský dashboard</h1>
+  <p class="muted">Zde vidíš své okruhy a nové články.</p>
+</section>
+
+<div class="grid two-col">
+  <section class="card">
+    <h2>Moje okruhy</h2>
+    {% if subscriptions %}
+      <ul class="simple-list">
+        {% for sub in subscriptions %}
+          <li>
+            <strong>{{ sub.topic.name }}</strong>
+            <span class="muted">— {{ sub.topic.price_czk }} Kč</span>
+            <form method="post" action="/subscriptions/remove/{{ sub.topic.id }}" class="inline-form">
+              <button class="link-button" type="submit">Odebrat</button>
+            </form>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>Zatím nemáš vybraný žádný okruh.</p>
+    {% endif %}
+  </section>
+
+  <section class="card">
+    <h2>Dostupné okruhy</h2>
+    {% if all_topics %}
+      <ul class="simple-list">
+        {% for topic in all_topics %}
+          <li>
+            <strong>{{ topic.name }}</strong>
+            <span class="muted">— {{ topic.price_czk }} Kč</span>
+            <div>{{ topic.description or "" }}</div>
+            <form method="post" action="/subscriptions/add/{{ topic.id }}" class="inline-form">
+              <button class="link-button" type="submit">Přidat</button>
+            </form>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>Zatím nejsou dostupné žádné okruhy.</p>
+    {% endif %}
+  </section>
+</div>
+
+<section class="card">
+  <h2>Nové rešerže</h2>
+  {% if articles %}
+    <div class="article-list">
+      {% for article in articles %}
+        <article class="article-item">
+          <div class="muted">
+            {{ article.source.topic.name }} · {{ article.source.name }}
+            {% if article.published_at %}· {{ article.published_at.strftime("%d.%m.%Y %H:%M") }}{% endif %}
+          </div>
+          <h3>{{ article.title }}</h3>
+          {% if article.summary %}<p>{{ article.summary }}</p>{% endif %}
+          <a class="button" href="/articles/{{ article.id }}/open">Otevřít původní článek</a>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>Pro tvoje vybrané okruhy zatím nejsou nové články.</p>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-head">
+  <h1>Uživatelé</h1>
+</section>
+
+<section class="card">
+  {% if users %}
+    <table class="table">
+      <thead>
+        <tr>
+          <th>E-mail</th>
+          <th>Role</th>
+          <th>Aktivní</th>
+          <th>Vytvořen</th>
+          <th>Poslední login</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+          <tr>
+            <td>{{ user.email }}</td>
+            <td>{{ user.role }}</td>
+            <td>{{ "ano" if user.is_active else "ne" }}</td>
+            <td>{{ user.created_at.strftime("%d.%m.%Y %H:%M") }}</td>
+            <td>{{ user.last_login_at.strftime("%d.%m.%Y %H:%M") if user.last_login_at else "—" }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>Zatím není žádný uživatel.</p>
+  {% endif %}
+</section>
+{% endblock %}

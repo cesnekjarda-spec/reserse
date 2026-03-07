@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-head">
+  <h1>{% if topic %}Upravit okruh{% else %}Nový okruh{% endif %}</h1>
+</section>
+
+<form class="card form-card" method="post" action="{% if topic %}/admin/topics/{{ topic.id }}/edit{% else %}/admin/topics/new{% endif %}">
+  {% if error %}<div class="alert">{{ error }}</div>{% endif %}
+  <label>Název</label>
+  <input type="text" name="name" value="{{ topic.name if topic else '' }}" required>
+
+  <label>Popis</label>
+  <textarea name="description" rows="4">{{ topic.description if topic and topic.description else '' }}</textarea>
+
+  <label>Cena / index v Kč</label>
+  <input type="number" name="price_czk" value="{{ topic.price_czk if topic else 0 }}" min="0" required>
+
+  <label>Pořadí</label>
+  <input type="number" name="sort_order" value="{{ topic.sort_order if topic else 0 }}" required>
+
+  <label class="checkbox">
+    <input type="checkbox" name="is_active" {% if not topic or topic.is_active %}checked{% endif %}>
+    Aktivní
+  </label>
+
+  <button class="button primary" type="submit">Uložit</button>
+</form>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <div>
+    <h1>Automatické RSS rešerše pro tvoje uživatele</h1>
+    <p>
+      Admin spravuje okruhy a zdroje. Uživatel si vybírá témata a po přihlášení vidí nové články
+      se stručným shrnutím a proklikem na původní zdroj.
+    </p>
+    <div class="actions">
+      <a class="button primary" href="/register">Začít registrací</a>
+      <a class="button" href="/login">Přihlásit se</a>
+    </div>
+  </div>
+</section>
+
+<section class="grid stats-grid">
+  <div class="card">
+    <div class="muted">Okruhy</div>
+    <div class="stat">{{ topic_count }}</div>
+  </div>
+  <div class="card">
+    <div class="muted">Zdroje</div>
+    <div class="stat">{{ source_count }}</div>
+  </div>
+  <div class="card">
+    <div class="muted">Načtené články</div>
+    <div class="stat">{{ article_count }}</div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Co tato verze umí</h2>
+  <ul class="simple-list">
+    <li>registrace a přihlášení</li>
+    <li>role admin / user</li>
+    <li>správa okruhů a RSS zdrojů</li>
+    <li>automatický sync článků</li>
+    <li>nové články jen pro zvolené okruhy</li>
+  </ul>
+</section>
+{% endblock %}

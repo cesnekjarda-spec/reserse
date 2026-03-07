@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-head row-between">
+  <div>
+    <h1>Okruhy</h1>
+    <p class="muted">Vytvářej a upravuj tematické okruhy.</p>
+  </div>
+  <a class="button primary" href="/admin/topics/new">Nový okruh</a>
+</section>
+
+<section class="card">
+  {% if topics %}
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Název</th>
+          <th>Slug</th>
+          <th>Cena</th>
+          <th>Aktivní</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for topic in topics %}
+          <tr>
+            <td>{{ topic.name }}</td>
+            <td>{{ topic.slug }}</td>
+            <td>{{ topic.price_czk }} Kč</td>
+            <td>{{ "ano" if topic.is_active else "ne" }}</td>
+            <td><a href="/admin/topics/{{ topic.id }}/edit">Upravit</a></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>Zatím není vytvořen žádný okruh.</p>
+  {% endif %}
+</section>
+{% endblock %}

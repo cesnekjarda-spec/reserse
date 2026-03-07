@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{{ title or "Research Feed App" }}</title>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="/">Research Feed App</a>
+      <nav>
+        {% if current_user %}
+          {% if current_user.role == "admin" %}
+            <a href="/admin">Admin</a>
+            <a href="/admin/topics">Okruhy</a>
+            <a href="/admin/sources">Zdroje</a>
+            <a href="/admin/users">Uživatelé</a>
+            <a href="/admin/sync-runs">Sync</a>
+          {% else %}
+            <a href="/dashboard">Dashboard</a>
+          {% endif %}
+          <a href="/logout">Odhlásit</a>
+        {% else %}
+          <a href="/login">Přihlášení</a>
+          <a href="/register">Registrace</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

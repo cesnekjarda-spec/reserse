@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-head">
+  <h1>{% if source %}Upravit zdroj{% else %}Nový zdroj{% endif %}</h1>
+</section>
+
+<form class="card form-card" method="post" action="{% if source %}/admin/sources/{{ source.id }}/edit{% else %}/admin/sources/new{% endif %}">
+  {% if error %}<div class="alert">{{ error }}</div>{% endif %}
+
+  <label>Okruh</label>
+  <select name="topic_id" required>
+    {% for topic in topics %}
+      <option value="{{ topic.id }}" {% if source and source.topic_id == topic.id %}selected{% endif %}>{{ topic.name }}</option>
+    {% endfor %}
+  </select>
+
+  <label>Název zdroje</label>
+  <input type="text" name="name" value="{{ source.name if source else '' }}" required>
+
+  <label>Web URL</label>
+  <input type="url" name="website_url" value="{{ source.website_url if source else '' }}" required>
+
+  <label>RSS URL</label>
+  <input type="url" name="rss_url" value="{{ source.rss_url if source else '' }}" required>
+
+  <label class="checkbox">
+    <input type="checkbox" name="is_active" {% if not source or source.is_active %}checked{% endif %}>
+    Aktivní
+  </label>
+
+  <button class="button primary" type="submit">Uložit</button>
+</form>
+{% endblock %}
