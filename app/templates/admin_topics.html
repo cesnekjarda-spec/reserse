@@ -1,39 +1,26 @@
 {% extends "base.html" %}
+{% block title %}Admin · Témata{% endblock %}
 {% block content %}
-<section class="page-head row-between">
-  <div>
-    <h1>Okruhy</h1>
-    <p class="muted">Vytvářej a upravuj tematické okruhy.</p>
-  </div>
-  <a class="button primary" href="/admin/topics/new">Nový okruh</a>
-</section>
-
 <section class="card">
-  {% if topics %}
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Název</th>
-          <th>Slug</th>
-          <th>Cena</th>
-          <th>Aktivní</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for topic in topics %}
-          <tr>
-            <td>{{ topic.name }}</td>
-            <td>{{ topic.slug }}</td>
-            <td>{{ topic.price_czk }} Kč</td>
-            <td>{{ "ano" if topic.is_active else "ne" }}</td>
-            <td><a href="/admin/topics/{{ topic.id }}/edit">Upravit</a></td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  {% else %}
-    <p>Zatím není vytvořen žádný okruh.</p>
-  {% endif %}
+  <h1>Témata</h1>
+  <form method="post" class="grid-form">
+    <label>Název<input type="text" name="name" required></label>
+    <label>Cena CZK<input type="number" name="price_czk" value="0"></label>
+    <label>Pořadí<input type="number" name="sort_order" value="0"></label>
+    <label class="full">Popis<textarea name="description" rows="3"></textarea></label>
+    <button class="btn" type="submit">Přidat téma</button>
+  </form>
+</section>
+<section class="card">
+  <table>
+    <thead><tr><th>Název</th><th>Slug</th><th>Cena</th><th>Pořadí</th><th>Aktivní</th></tr></thead>
+    <tbody>
+    {% for topic in topics %}
+      <tr>
+        <td>{{ topic.name }}</td><td>{{ topic.slug }}</td><td>{{ topic.price_czk }}</td><td>{{ topic.sort_order }}</td><td>{{ 'ano' if topic.is_active else 'ne' }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
 </section>
 {% endblock %}

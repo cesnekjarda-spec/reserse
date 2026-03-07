@@ -1,31 +1,40 @@
 {% extends "base.html" %}
+{% block title %}Admin{% endblock %}
 {% block content %}
-<section class="page-head">
+<section class="card">
   <h1>Admin dashboard</h1>
-  <p class="muted">Přehled celé aplikace.</p>
+  <p>Zde můžeš ručně spustit sync a spravovat témata i zdroje.</p>
+  <div class="stats-grid">
+    <article class="card stat"><strong>{{ topic_count }}</strong><span>témat</span></article>
+    <article class="card stat"><strong>{{ source_count }}</strong><span>zdrojů</span></article>
+    <article class="card stat"><strong>{{ article_count }}</strong><span>článků</span></article>
+    <article class="card stat"><strong>{{ user_count }}</strong><span>uživatelů</span></article>
+  </div>
+  <div class="hero-actions">
+    <form method="post" action="/admin/sync"><button class="btn" type="submit">Spustit ruční RSS sync</button></form>
+    <a class="btn btn-light" href="/admin/topics">Správa témat</a>
+    <a class="btn btn-light" href="/admin/sources">Správa zdrojů</a>
+    <a class="btn btn-light" href="/admin/users">Uživatelé</a>
+  </div>
 </section>
 
-<div class="grid stats-grid">
-  <div class="card"><div class="muted">Uživatelé</div><div class="stat">{{ stats.users }}</div></div>
-  <div class="card"><div class="muted">Okruhy</div><div class="stat">{{ stats.topics }}</div></div>
-  <div class="card"><div class="muted">Zdroje</div><div class="stat">{{ stats.sources }}</div></div>
-  <div class="card"><div class="muted">Články</div><div class="stat">{{ stats.articles }}</div></div>
-</div>
-
 <section class="card">
-  <h2>Poslední sync</h2>
-  {% if latest_sync %}
-    <p>
-      Stav: <strong>{{ latest_sync.status }}</strong><br>
-      Začátek: {{ latest_sync.started_at.strftime("%d.%m.%Y %H:%M") }}<br>
-      Vloženo článků: {{ latest_sync.articles_created }}<br>
-      Úspěšné zdroje: {{ latest_sync.sources_ok }} / {{ latest_sync.sources_total }}
-    </p>
-  {% else %}
-    <p>Zatím neproběhl žádný sync.</p>
-  {% endif %}
-  <form method="post" action="/admin/sync/run">
-    <button class="button primary" type="submit">Spustit sync ručně</button>
-  </form>
+  <h2>Poslední synchronizace</h2>
+  <table>
+    <thead><tr><th>Čas</th><th>Spouštěč</th><th>Stav</th><th>Nové články</th><th>Chyby</th></tr></thead>
+    <tbody>
+      {% for run in last_runs %}
+      <tr>
+        <td>{{ run.created_at }}</td>
+        <td>{{ run.triggered_by }}</td>
+        <td>{{ run.status }}</td>
+        <td>{{ run.total_articles_created }}</td>
+        <td>{{ run.total_errors }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5">Zatím žádné synchronizace.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </section>
 {% endblock %}

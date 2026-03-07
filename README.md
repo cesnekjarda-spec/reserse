@@ -1,109 +1,59 @@
-# Research Feed App v1
+# Research Feed App – clean rebuild
 
-Jednoduchá samostatná webová aplikace pro:
-- registraci a přihlášení uživatelů,
-- role `admin` / `user`,
-- správu okruhů a RSS zdrojů,
-- pravidelné načítání RSS zpráv,
-- zobrazení nových rešerží přihlášenému uživateli.
+Tato verze je postavená jako čistší a odolnější základ pro rešeršní aplikaci ve stacku FastAPI + Jinja2 + SQLAlchemy + Neon/Render. Původní veřejné repo už používalo právě tuto kombinaci a současně samo přiznávalo, že seed data jsou záměrně velmi malá; navíc bootstrap admina v aktuálním kódu jen povyšoval existujícího uživatele na admina, ale nepřepisoval mu heslo. To byl hlavní důvod, proč se přihlášení umělo zaseknout na starém záznamu. Tento balík to řeší robustněji.
 
-## Použité technologie
 
-- FastAPI
-- Jinja2 šablony
-- SQLAlchemy
-- Neon Postgres
-- Render.com
-- GitHub Actions pro plánovaný RSS sync
+## Co je připravené hned po startu
 
-## Co tato verze umí
+- automatické vytvoření / dorovnání účtů:
+  - **Admin** / **Ahojky12345**
+  - **User** / **Ahojky54321**
+- login funguje přes **uživatelské jméno i e-mail**,
+- při každém startu se hesla těchto dvou účtů znovu sladí s nastavením,
+- automaticky se založí **20 témat**,
+- automaticky se založí **200 RSS zdrojů**,
+- testovací účet `User` je po startu přihlásitelný a má předplacena všechna seed témata,
+- admin může ručně spouštět RSS sync a přidávat další témata i zdroje.
 
-- veřejná registrace běžného uživatele,
-- bezpečné hashování hesel pomocí Argon2,
-- session cookie přihlášení,
-- admin dashboard,
-- správa okruhů a zdrojů,
-- dashboard uživatele s novými články,
-- interní RSS sync endpoint chráněný tajným klíčem.
+## Proč jsou zdroje řešené přes Google News RSS vyhledávání
+
+Pro seed data je použitý vzor `https://news.google.com/rss/search?q=...`, protože umožňuje rychle vytvořit mnoho tematických RSS zdrojů nad jedním stabilním formátem. Feedly i další technické návody ukazují Google News RSS pattern pro top headlines i topic/search feeds. To je pro první funkční nasazení praktičtější než ručně skládat stovky publisher-specific feedů. Později můžeš jednotlivé zdroje v adminu nahradit čistě publisher-native RSS URL.
+
 
 ## Lokální spuštění
 
-1. Vytvoř virtuální prostředí:
-   ```bash
-   python -m venv .venv
-   ```
+```bash
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+cp .env.example .env
+python -m uvicorn app.main:app --reload
+```
 
-2. Aktivuj ho:
-   - Windows:
-     ```bash
-     .venv\Scripts\activate
-     ```
-   - macOS / Linux:
-     ```bash
-     source .venv/bin/activate
-     ```
+Aplikace poběží na `http://127.0.0.1:8000`.
 
-3. Nainstaluj závislosti:
-   ```bash
-   pip install -r requirements.txt
-   ```
+## Render / Neon
 
-4. Zkopíruj `.env.example` na `.env` a doplň údaje.
+1. Nahraj projekt do GitHub repa.
+2. Na Renderu vytvoř web service z tohoto repa.
+3. Nastav minimálně `DATABASE_URL` a `SYNC_SECRET`.
+4. Ostatní bootstrap proměnné můžeš ponechat, nebo si je změnit.
 
-5. Spusť aplikaci:
-   ```bash
-   uvicorn app.main:app --reload
-   ```
+Pokud `DATABASE_URL` nevyplníš, app použije lokální SQLite `app.db`, takže nespadne už při bootu.
 
-6. Otevři:
-   - http://127.0.0.1:8000
-   - admin se vytvoří automaticky při startu, pokud vyplníš `ADMIN_EMAIL` a `ADMIN_PASSWORD`.
+## Jednorázové dorovnání seed dat
 
-## Nasazení na Render
+```bash
+python -m scripts.seed_all
+```
 
-1. Nahraj tento projekt do GitHub repozitáře.
-2. Na Renderu vytvoř novou web service z GitHub repa.
-3. Přidej environment variables:
-   - `DATABASE_URL`
-   - `SYNC_SECRET`
-   - `ADMIN_EMAIL`
-   - `ADMIN_PASSWORD`
-4. Render při startu vytvoří databázové tabulky a případně prvního admina.
+## Důležité
 
-## Plánovaný RSS sync přes GitHub Actions
+Tahle verze je záměrně stavěná jako odolnější základ proti točení v kruhu:
 
-Workflow `.github/workflows/sync-rss.yml` volá endpoint:
-`POST /internal/sync-rss`
-
-Musíš nastavit GitHub secrets:
-- `SYNC_URL`
-- `SYNC_SECRET`
-
-Příklad:
-- `SYNC_URL=https://tvoje-aplikace.onrender.com/internal/sync-rss`
-- `SYNC_SECRET=stejná hodnota jako na Renderu`
-
-## Poznámka k RSS zdrojům
-
-Do seed dat jsem záměrně nedal velké množství českých feedů natvrdo. U každého zdroje je lepší ověřit konkrétní RSS URL před nasazením. Například Měšec.cz na své stránce „Exporty“ veřejně uvádí RSS adresy pro články a aktuality. Peníze.cz má veřejnou RSS sekci, ale konkrétní feed URL je vhodné ověřit zvlášť při přidávání do adminu. citeturn1view1turn1view0
-
-## Doporučené první testy
-
-1. Spusť aplikaci.
-2. Přihlas se jako admin.
-3. Vytvoř okruh `Finance`.
-4. Přidej RSS zdroj například z Měšce.
-5. Spusť ruční sync v adminu.
-6. Zaregistruj běžného uživatele.
-7. Přihlas se jako user a přidej si okruh.
-8. Zkontroluj nové články na dashboardu.
-
-## Další rozvoj
-
-Další logický krok:
-- přidat editaci uživatelů,
-- přidat filtrování článků,
-- přidat e-mailové notifikace,
-- přidat lepší admin formuláře,
-- přidat migrace přes Alembic,
-- připravit iframe variantu pro vložení do hlavní aplikace.
+- defaultně **nespadne kvůli chybějícímu DATABASE_URL**, protože má fallback na SQLite,
+- systémové účty se **při startu opravují/upsertují**, ne jen jednorázově zakládají,
+- login nepředpokládá jen e-mail,
+- seed dat je velký už od začátku,
+- RSS sync neblokuje boot.

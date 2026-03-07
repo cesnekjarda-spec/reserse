@@ -1,39 +1,32 @@
 {% extends "base.html" %}
+{% block title %}Admin · Zdroje{% endblock %}
 {% block content %}
-<section class="page-head row-between">
-  <div>
-    <h1>Zdroje</h1>
-    <p class="muted">Přidávej RSS feedy do okruhů.</p>
-  </div>
-  <a class="button primary" href="/admin/sources/new">Nový zdroj</a>
-</section>
-
 <section class="card">
-  {% if sources %}
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Název</th>
-          <th>Okruh</th>
-          <th>RSS</th>
-          <th>Aktivní</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for source in sources %}
-          <tr>
-            <td>{{ source.name }}</td>
-            <td>{{ source.topic.name }}</td>
-            <td class="small-text">{{ source.rss_url }}</td>
-            <td>{{ "ano" if source.is_active else "ne" }}</td>
-            <td><a href="/admin/sources/{{ source.id }}/edit">Upravit</a></td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  {% else %}
-    <p>Zatím není přidán žádný zdroj.</p>
-  {% endif %}
+  <h1>RSS zdroje</h1>
+  <form method="post" class="grid-form">
+    <label>Téma
+      <select name="topic_id" required>
+        {% for topic in topics %}<option value="{{ topic.id }}">{{ topic.name }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Název<input type="text" name="name" required></label>
+    <label class="full">RSS URL<input type="url" name="rss_url" required></label>
+    <label class="full">Web URL<input type="url" name="website_url"></label>
+    <button class="btn" type="submit">Přidat zdroj</button>
+  </form>
+</section>
+<section class="card">
+  <table>
+    <thead><tr><th>Název</th><th>Téma</th><th>RSS</th></tr></thead>
+    <tbody>
+    {% for source in sources %}
+      <tr>
+        <td>{{ source.name }}</td>
+        <td>{{ source.topic.name if source.topic else '' }}</td>
+        <td class="url-cell">{{ source.rss_url }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
 </section>
 {% endblock %}

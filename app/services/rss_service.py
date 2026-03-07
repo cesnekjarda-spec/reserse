@@ -27,11 +27,10 @@ def parse_published(entry) -> datetime | None:
 def clean_summary(value: str | None) -> str | None:
     if not value:
         return None
-    text = html.unescape(value)
-    text = text.replace("<br>", " ").replace("<br/>", " ").replace("<br />", " ")
-    text = re.sub(r"<[^>]+>", " ", text)
-    text = re.sub(r"\s+", " ", text).strip()
-    return text[:2000]
+    value = html.unescape(value)
+    value = re.sub(r"<[^>]+>", " ", value)
+    value = re.sub(r"\s+", " ", value).strip()
+    return value or None
 
 
 def parse_feed(rss_url: str):

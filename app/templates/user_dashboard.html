@@ -1,69 +1,35 @@
 {% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
 {% block content %}
-<section class="page-head">
+<section class="card">
   <h1>Uživatelský dashboard</h1>
-  <p class="muted">Zde vidíš své okruhy a nové články.</p>
+  <p>Vyber témata, která chceš sledovat. Testovací účet <strong>User</strong> má po startu předplacena všechna témata.</p>
+  <form method="post" action="/dashboard/subscriptions" class="topic-checkboxes">
+    {% for topic in topics %}
+      <label class="checkbox-item"><input type="checkbox" name="topic_ids" value="{{ topic.id }}" {% if topic.id in selected_ids %}checked{% endif %}> {{ topic.name }}</label>
+    {% endfor %}
+    <button class="btn" type="submit">Uložit výběr</button>
+  </form>
 </section>
 
-<div class="grid two-col">
-  <section class="card">
-    <h2>Moje okruhy</h2>
-    {% if subscriptions %}
-      <ul class="simple-list">
-        {% for sub in subscriptions %}
-          <li>
-            <strong>{{ sub.topic.name }}</strong>
-            <span class="muted">— {{ sub.topic.price_czk }} Kč</span>
-            <form method="post" action="/subscriptions/remove/{{ sub.topic.id }}" class="inline-form">
-              <button class="link-button" type="submit">Odebrat</button>
-            </form>
-          </li>
-        {% endfor %}
-      </ul>
-    {% else %}
-      <p>Zatím nemáš vybraný žádný okruh.</p>
-    {% endif %}
-  </section>
-
-  <section class="card">
-    <h2>Dostupné okruhy</h2>
-    {% if all_topics %}
-      <ul class="simple-list">
-        {% for topic in all_topics %}
-          <li>
-            <strong>{{ topic.name }}</strong>
-            <span class="muted">— {{ topic.price_czk }} Kč</span>
-            <div>{{ topic.description or "" }}</div>
-            <form method="post" action="/subscriptions/add/{{ topic.id }}" class="inline-form">
-              <button class="link-button" type="submit">Přidat</button>
-            </form>
-          </li>
-        {% endfor %}
-      </ul>
-    {% else %}
-      <p>Zatím nejsou dostupné žádné okruhy.</p>
-    {% endif %}
-  </section>
-</div>
-
 <section class="card">
-  <h2>Nové rešerže</h2>
-  {% if articles %}
-    <div class="article-list">
-      {% for article in articles %}
-        <article class="article-item">
-          <div class="muted">
-            {{ article.source.topic.name }} · {{ article.source.name }}
-            {% if article.published_at %}· {{ article.published_at.strftime("%d.%m.%Y %H:%M") }}{% endif %}
-          </div>
-          <h3>{{ article.title }}</h3>
-          {% if article.summary %}<p>{{ article.summary }}</p>{% endif %}
-          <a class="button" href="/articles/{{ article.id }}/open">Otevřít původní článek</a>
-        </article>
-      {% endfor %}
+  <h2>Nejnovější články</h2>
+  {% for article in articles %}
+  <article class="article-card {% if article.id in read_ids %}read{% endif %}">
+    <div class="article-meta">
+      <span>{{ article.source.topic.name if article.source and article.source.topic else '' }}</span>
+      <span>{{ article.published_at or article.created_at }}</span>
     </div>
+    <h3><a href="{{ article.url }}" target="_blank" rel="noopener">{{ article.title }}</a></h3>
+    {% if article.summary %}<p>{{ article.summary }}</p>{% endif %}
+    {% if article.id not in read_ids %}
+    <form method="post" action="/articles/{{ article.id }}/read">
+      <button class="btn btn-light" type="submit">Označit jako přečtené</button>
+    </form>
+    {% endif %}
+  </article>
   {% else %}
-    <p>Pro tvoje vybrané okruhy zatím nejsou nové články.</p>
-  {% endif %}
+  <p>Zatím tu nejsou žádné články. Přihlas se jako admin a spusť RSS sync.</p>
+  {% endfor %}
 </section>
 {% endblock %}

@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from app.models.session import UserSession
@@ -12,14 +12,37 @@ from app.utils.security import (
 )
 
 
+def normalize_identity(value: str) -> str:
+    return value.strip()
+
+
 def get_user_by_email(db: Session, email: str) -> User | None:
-    stmt = select(User).where(User.email == email.lower().strip())
+    stmt = select(User).where(User.email == email.strip().lower())
     return db.scalar(stmt)
 
 
-def create_user(db: Session, email: str, password: str, role: str = "user") -> User:
+def get_user_by_username(db: Session, username: str) -> User | None:
+    stmt = select(User).where(User.username == username.strip())
+    return db.scalar(stmt)
+
+
+def get_user_by_identity(db: Session, identity: str) -> User | None:
+    clean = normalize_identity(identity)
+    stmt = select(User).where(
+        or_(
+            User.email == clean.lower(),
+            User.username == clean,
+            User.username == clean.lower(),
+            User.username == clean.capitalize(),
+        )
+    )
+    return db.scalar(stmt)
+
+
+def create_user(db: Session, username: str, email: str, password: str, role: str = "user") -> User:
     user = User(
-        email=email.lower().strip(),
+        username=username.strip(),
+        email=email.strip().lower(),
         password_hash=hash_password(password),
         role=role,
         is_active=True,
@@ -30,14 +53,27 @@ def create_user(db: Session, email: str, password: str, role: str = "user") -> U
     return user
 
 
-def authenticate_user(db: Session, email: str, password: str) -> User | None:
-    user = get_user_by_email(db, email)
+def upsert_user(db: Session, username: str, email: str, password: str, role: str = "user") -> User:
+    existing = get_user_by_email(db, email) or get_user_by_username(db, username)
+    if existing:
+        existing.username = username.strip()
+        existing.email = email.strip().lower()
+        existing.password_hash = hash_password(password)
+        existing.role = role
+        existing.is_active = True
+        db.add(existing)
+        db.commit()
+        db.refresh(existing)
+        return existing
+    return create_user(db, username=username, email=email, password=password, role=role)
+
+
+def authenticate_user(db: Session, identity: str, password: str) -> User | None:
+    user = get_user_by_identity(db, identity)
     if not user or not user.is_active:
         return None
-
     if not verify_password(password, user.password_hash):
         return None
-
     user.last_login_at = utcnow()
     db.add(user)
     db.commit()
@@ -66,7 +102,6 @@ def create_session(
 def revoke_session(db: Session, raw_token: str | None) -> None:
     if not raw_token:
         return
-
     stmt = select(UserSession).where(UserSession.session_token_hash == hash_token(raw_token))
     session = db.scalar(stmt)
     if session and session.revoked_at is None:
@@ -78,7 +113,6 @@ def revoke_session(db: Session, raw_token: str | None) -> None:
 def get_user_from_session_token(db: Session, raw_token: str | None) -> User | None:
     if not raw_token:
         return None
-
     stmt = (
         select(UserSession)
         .where(UserSession.session_token_hash == hash_token(raw_token))
@@ -87,31 +121,9 @@ def get_user_from_session_token(db: Session, raw_token: str | None) -> User | No
     session = db.scalar(stmt)
     if not session:
         return None
-
     if session.expires_at < utcnow():
         session.revoked_at = utcnow()
         db.add(session)
         db.commit()
         return None
-
     return db.get(User, session.user_id)
-
-
-def ensure_admin_exists(db: Session, email: str | None, password: str | None) -> None:
-    if not email or not password:
-        return
-
-    normalized_email = email.lower().strip()
-    existing = get_user_by_email(db, normalized_email)
-
-    if existing:
-        existing.email = normalized_email
-        existing.password_hash = hash_password(password)
-        existing.role = "admin"
-        existing.is_active = True
-        db.add(existing)
-        db.commit()
-        db.refresh(existing)
-        return
-
-    create_user(db, email=normalized_email, password=password, role="admin")

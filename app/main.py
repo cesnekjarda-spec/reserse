@@ -7,13 +7,14 @@ from fastapi.templating import Jinja2Templates
 from app.config import settings
 from app.db import SessionLocal, init_db
 from app.routes import admin, auth, internal, public, user
-from app.services.auth_service import ensure_admin_exists, get_user_from_session_token
+from app.services.auth_service import get_user_from_session_token
+from app.services.bootstrap_service import ensure_system_accounts
+from app.services.sync_service import run_sync
 
 
 BASE_DIR = Path(__file__).resolve().parent
 
 app = FastAPI(title=settings.app_name)
-
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 app.state.templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
@@ -22,13 +23,11 @@ app.state.templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 async def load_current_user(request: Request, call_next):
     request.state.current_user = None
     raw_token = request.cookies.get(settings.session_cookie_name)
-
     if raw_token:
         with SessionLocal() as db:
-            user = get_user_from_session_token(db, raw_token)
-            if user and user.is_active:
-                request.state.current_user = user
-
+            current_user = get_user_from_session_token(db, raw_token)
+            if current_user and current_user.is_active:
+                request.state.current_user = current_user
     response = await call_next(request)
     return response
 
@@ -37,7 +36,9 @@ async def load_current_user(request: Request, call_next):
 def startup() -> None:
     init_db()
     with SessionLocal() as db:
-        ensure_admin_exists(db, settings.admin_email, settings.admin_password)
+        ensure_system_accounts(db)
+        if settings.auto_sync_on_startup:
+            run_sync(db, triggered_by="startup")
 
 
 app.include_router(public.router)

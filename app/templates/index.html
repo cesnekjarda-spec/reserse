@@ -1,42 +1,35 @@
 {% extends "base.html" %}
+{% block title %}Úvod · Research Feed App{% endblock %}
 {% block content %}
-<section class="hero">
-  <div>
-    <h1>Automatické RSS rešerše pro tvoje uživatele</h1>
-    <p>
-      Admin spravuje okruhy a zdroje. Uživatel si vybírá témata a po přihlášení vidí nové články
-      se stručným shrnutím a proklikem na původní zdroj.
-    </p>
-    <div class="actions">
-      <a class="button primary" href="/register">Začít registrací</a>
-      <a class="button" href="/login">Přihlásit se</a>
-    </div>
+<section class="hero card">
+  <h1>Hotová základna pro rešeršní aplikaci</h1>
+  <p>Po startu se sama založí databázová struktura, testovací admin a testovací user. Navíc se automaticky založí 20 témat a 200 RSS zdrojů.</p>
+  <div class="hero-actions">
+    <a class="btn" href="/login">Přihlásit se</a>
+    <a class="btn btn-light" href="/register">Registrovat nového uživatele</a>
+  </div>
+  <div class="credentials">
+    <div><strong>Admin:</strong> Admin / Ahojky12345</div>
+    <div><strong>User:</strong> User / Ahojky54321</div>
   </div>
 </section>
 
-<section class="grid stats-grid">
-  <div class="card">
-    <div class="muted">Okruhy</div>
-    <div class="stat">{{ topic_count }}</div>
-  </div>
-  <div class="card">
-    <div class="muted">Zdroje</div>
-    <div class="stat">{{ source_count }}</div>
-  </div>
-  <div class="card">
-    <div class="muted">Načtené články</div>
-    <div class="stat">{{ article_count }}</div>
-  </div>
+<section class="stats-grid">
+  <article class="card stat"><strong>{{ topic_count }}</strong><span>témat</span></article>
+  <article class="card stat"><strong>{{ source_count }}</strong><span>RSS zdrojů</span></article>
+  <article class="card stat"><strong>{{ article_count }}</strong><span>načtených článků</span></article>
+  <article class="card stat"><strong>{{ user_count }}</strong><span>uživatelů</span></article>
 </section>
 
 <section class="card">
-  <h2>Co tato verze umí</h2>
-  <ul class="simple-list">
-    <li>registrace a přihlášení</li>
-    <li>role admin / user</li>
-    <li>správa okruhů a RSS zdrojů</li>
-    <li>automatický sync článků</li>
-    <li>nové články jen pro zvolené okruhy</li>
-  </ul>
+  <h2>Ukázka témat</h2>
+  <div class="topic-grid">
+  {% for topic in latest_topics %}
+    <div class="topic-card">
+      <h3>{{ topic.name }}</h3>
+      <p>{{ topic.description }}</p>
+    </div>
+  {% endfor %}
+  </div>
 </section>
 {% endblock %}
