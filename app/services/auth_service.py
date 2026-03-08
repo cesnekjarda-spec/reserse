@@ -121,8 +121,14 @@ def get_user_from_session_token(db: Session, raw_token: str | None) -> User | No
     session = db.scalar(stmt)
     if not session:
         return None
-    if session.expires_at < utcnow():
-        session.revoked_at = utcnow()
+
+    expires_at = session.expires_at
+    now = utcnow()
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=now.tzinfo)
+
+    if expires_at < now:
+        session.revoked_at = now
         db.add(session)
         db.commit()
         return None

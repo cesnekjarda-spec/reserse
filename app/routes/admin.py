@@ -101,7 +101,12 @@ def admin_sources(request: Request):
         return RedirectResponse(url="/login", status_code=303)
     with SessionLocal() as db:
         topics = db.scalars(select(Topic).order_by(Topic.sort_order.asc(), Topic.name.asc())).all()
-        sources = db.scalars(select(Source).order_by(Source.created_at.desc()).limit(400)).all()
+        sources = db.scalars(
+            select(Source)
+            .options(joinedload(Source.topic))
+            .order_by(Source.created_at.desc())
+            .limit(400)
+        ).unique().all()
     return request.app.state.templates.TemplateResponse(
         "admin_sources.html", template_context(request, topics=topics, sources=sources)
     )

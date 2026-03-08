@@ -37,11 +37,12 @@ def dashboard(request: Request):
         if selected_ids:
             articles = db.scalars(
                 select(Article)
+                .options(joinedload(Article.source).joinedload(Source.topic))
                 .join(Source, Source.id == Article.source_id)
                 .where(Source.topic_id.in_(selected_ids))
                 .order_by(desc(Article.published_at), desc(Article.created_at))
                 .limit(150)
-            ).all()
+            ).unique().all()
         else:
             articles = []
     return request.app.state.templates.TemplateResponse(
