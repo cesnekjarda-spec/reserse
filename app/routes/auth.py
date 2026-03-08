@@ -93,13 +93,17 @@ def login_submit(request: Request, identity: str = Form(...), password: str = Fo
             return request.app.state.templates.TemplateResponse(
                 "login.html", template_context(request, error="Neplatné jméno / e-mail nebo heslo."), status_code=400
             )
+
+        target_url = "/admin" if user.role == "admin" else "/dashboard"
+
         token = create_session(
             db,
             user,
             ip_address=request.client.host if request.client else None,
             user_agent=request.headers.get("user-agent"),
         )
-        response = RedirectResponse(url="/admin" if user.role == "admin" else "/dashboard", status_code=303)
+
+        response = RedirectResponse(url=target_url, status_code=303)
         _set_session_cookie(response, token)
         return response
 
