@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Reserse · Briefingy{% endblock %}
+{% block content %}
+<section class="panel-header card-soft-accent">
+  <div>
+    <div class="eyebrow">Publikační workflow</div>
+    <h1>Draft briefingy</h1>
+    <p>Nejprve vytvoř drafty z posledních článků, potom je zkontroluj a publikuj do uživatelské části.</p>
+  </div>
+  <div class="hero-actions">
+    <form method="post" action="/admin/briefs/generate-all"><button class="btn" type="submit">Generovat všechny drafty</button></form>
+    <a class="btn btn-secondary" href="/admin">Zpět na admin dashboard</a>
+  </div>
+</section>
+
+<section class="card">
+  <div class="brief-admin-grid">
+    {% for topic in topics %}
+      {% set brief = briefs_by_topic.get(topic.id) %}
+      <article class="topic-card briefing-admin-card">
+        <div class="topic-meta-row">
+          <span class="topic-chip">{{ topic.name }}</span>
+          {% if brief %}
+            <span class="status-badge {{ 'status-published' if brief.status == 'published' else 'status-draft' }}">{{ brief.status }}</span>
+          {% else %}
+            <span class="status-badge status-empty">bez draftu</span>
+          {% endif %}
+        </div>
+        <h3>{{ brief.title if brief else topic.name ~ ' — briefing čeká na vygenerování' }}</h3>
+        <p>{{ brief.summary if brief else topic.description }}</p>
+        {% if brief %}
+          <div class="mini-meta">{{ brief.article_count }} článků · {{ brief.source_count }} zdrojů</div>
+          <div class="brief-block"><strong>Co se děje</strong><div class="preline">{{ brief.what_happened }}</div></div>
+          <div class="brief-block"><strong>Proč je to důležité</strong><div>{{ brief.why_it_matters }}</div></div>
+          <div class="brief-block"><strong>Co dál sledovat</strong><div>{{ brief.watchlist }}</div></div>
+          <div class="chip-row">
+            {% for point in brief.key_points %}<span class="keyword-chip">{{ point }}</span>{% endfor %}
+          </div>
+        {% endif %}
+        <div class="hero-actions compact-actions">
+          <form method="post" action="/admin/briefs/generate/{{ topic.id }}"><button class="btn btn-ghost" type="submit">Regenerovat</button></form>
+          {% if brief and brief.status != 'published' %}
+            <form method="post" action="/admin/briefs/{{ brief.id }}/publish"><button class="btn" type="submit">Publikovat</button></form>
+          {% elif brief %}
+            <form method="post" action="/admin/briefs/{{ brief.id }}/unpublish"><button class="btn btn-secondary" type="submit">Vrátit do draftu</button></form>
+          {% endif %}
+        </div>
+      </article>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

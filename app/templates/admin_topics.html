@@ -1,8 +1,10 @@
 {% extends "base.html" %}
-{% block title %}Admin · Témata{% endblock %}
+{% block title %}Reserse · Témata{% endblock %}
 {% block content %}
 <section class="card">
-  <h1>Témata</h1>
+  <div class="section-head">
+    <div><div class="eyebrow">Katalog</div><h1>Témata</h1></div>
+  </div>
   <form method="post" class="grid-form">
     <label>Název<input type="text" name="name" required></label>
     <label>Cena CZK<input type="number" name="price_czk" value="0"></label>
@@ -12,15 +14,17 @@
   </form>
 </section>
 <section class="card">
-  <table>
-    <thead><tr><th>Název</th><th>Slug</th><th>Cena</th><th>Pořadí</th><th>Aktivní</th></tr></thead>
-    <tbody>
-    {% for topic in topics %}
-      <tr>
-        <td>{{ topic.name }}</td><td>{{ topic.slug }}</td><td>{{ topic.price_czk }}</td><td>{{ topic.sort_order }}</td><td>{{ 'ano' if topic.is_active else 'ne' }}</td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Název</th><th>Slug</th><th>Cena</th><th>Pořadí</th><th>Aktivní</th></tr></thead>
+      <tbody>
+      {% for topic in topics %}
+        <tr>
+          <td>{{ topic.name }}</td><td>{{ topic.slug }}</td><td>{{ topic.price_czk }}</td><td>{{ topic.sort_order }}</td><td>{{ 'ano' if topic.is_active else 'ne' }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </section>
 {% endblock %}

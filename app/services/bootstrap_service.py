@@ -8,11 +8,12 @@ from app.models.topic import Topic
 from app.models.user import User
 from app.seed_data import SEED_TOPICS
 from app.services.auth_service import upsert_user
+from app.services.external_provider_service import ensure_external_providers, ensure_user_provider_preferences
 from app.utils.text import slugify
 
 
 def ensure_system_accounts(db: Session) -> None:
-    upsert_user(
+    admin_user = upsert_user(
         db,
         username=settings.bootstrap_admin_username,
         email=settings.bootstrap_admin_email,
@@ -28,6 +29,9 @@ def ensure_system_accounts(db: Session) -> None:
     )
     ensure_seed_topics_and_sources(db)
     ensure_default_user_subscriptions(db, normal_user)
+    ensure_external_providers(db)
+    ensure_user_provider_preferences(db, admin_user)
+    ensure_user_provider_preferences(db, normal_user)
 
 
 def ensure_seed_topics_and_sources(db: Session) -> None:

@@ -5,10 +5,13 @@ from sqlalchemy.orm import joinedload
 
 from app.db import SessionLocal
 from app.models.article import Article
+from app.models.brief import Brief
+from app.models.provider import ExternalProvider, UserProviderPreference
 from app.models.source import Source
 from app.models.sync import SyncRun
 from app.models.topic import Topic
 from app.models.user import User
+from app.services.brief_service import generate_all_briefs, generate_topic_brief, publish_brief
 from app.services.sync_service import run_sync
 from app.utils.templates import template_context
 from app.utils.text import slugify
@@ -33,6 +36,9 @@ def admin_dashboard(request: Request):
         source_count = db.scalar(select(func.count()).select_from(Source)) or 0
         article_count = db.scalar(select(func.count()).select_from(Article)) or 0
         user_count = db.scalar(select(func.count()).select_from(User)) or 0
+        brief_count = db.scalar(select(func.count()).select_from(Brief)) or 0
+        published_brief_count = db.scalar(select(func.count()).select_from(Brief).where(Brief.status == "published")) or 0
+        provider_count = db.scalar(select(func.count()).select_from(ExternalProvider).where(ExternalProvider.is_active.is_(True))) or 0
         last_runs = db.scalars(select(SyncRun).order_by(SyncRun.created_at.desc()).limit(8)).all()
     return request.app.state.templates.TemplateResponse(
         "admin_dashboard.html",
@@ -42,6 +48,9 @@ def admin_dashboard(request: Request):
             source_count=source_count,
             article_count=article_count,
             user_count=user_count,
+            brief_count=brief_count,
+            published_brief_count=published_brief_count,
+            provider_count=provider_count,
             last_runs=last_runs,
         ),
     )
@@ -54,6 +63,86 @@ def admin_sync(request: Request):
     with SessionLocal() as db:
         result = run_sync(db, triggered_by="admin")
     return RedirectResponse(url=f"/admin?sync={result['articles_created']}", status_code=303)
+
+
+@router.get("/briefs", response_class=HTMLResponse)
+def admin_briefs(request: Request):
+    if not require_admin(request):
+        return RedirectResponse(url="/login", status_code=303)
+    with SessionLocal() as db:
+        topics = db.scalars(select(Topic).where(Topic.is_active.is_(True)).order_by(Topic.sort_order.asc(), Topic.name.asc())).all()
+        briefs = db.scalars(
+            select(Brief).options(joinedload(Brief.topic)).order_by(Brief.updated_at.desc())
+        ).unique().all()
+        briefs_by_topic = {brief.topic_id: brief for brief in briefs}
+    return request.app.state.templates.TemplateResponse(
+        "admin_briefs.html",
+        template_context(request, topics=topics, briefs=briefs, briefs_by_topic=briefs_by_topic),
+    )
+
+
+@router.post("/briefs/generate-all")
+def admin_generate_all_briefs(request: Request):
+    if not require_admin(request):
+        return RedirectResponse(url="/login", status_code=303)
+    with SessionLocal() as db:
+        generate_all_briefs(db)
+    return RedirectResponse(url="/admin/briefs", status_code=303)
+
+
+@router.post("/briefs/generate/{topic_id}")
+def admin_generate_topic_brief(request: Request, topic_id: str):
+    if not require_admin(request):
+        return RedirectResponse(url="/login", status_code=303)
+    with SessionLocal() as db:
+        topic = db.get(Topic, topic_id)
+        if topic:
+            generate_topic_brief(db, topic)
+    return RedirectResponse(url="/admin/briefs", status_code=303)
+
+
+@router.post("/briefs/{brief_id}/publish")
+def admin_publish_brief(request: Request, brief_id: str):
+    if not require_admin(request):
+        return RedirectResponse(url="/login", status_code=303)
+    with SessionLocal() as db:
+        publish_brief(db, brief_id, publish=True)
+    return RedirectResponse(url="/admin/briefs", status_code=303)
+
+
+@router.post("/briefs/{brief_id}/unpublish")
+def admin_unpublish_brief(request: Request, brief_id: str):
+    if not require_admin(request):
+        return RedirectResponse(url="/login", status_code=303)
+    with SessionLocal() as db:
+        publish_brief(db, brief_id, publish=False)
+    return RedirectResponse(url="/admin/briefs", status_code=303)
+
+
+@router.get("/providers", response_class=HTMLResponse)
+def admin_providers(request: Request):
+    if not require_admin(request):
+        return RedirectResponse(url="/login", status_code=303)
+    with SessionLocal() as db:
+        providers = db.scalars(select(ExternalProvider).order_by(ExternalProvider.sort_order.asc(), ExternalProvider.name.asc())).all()
+        preference_count = db.scalar(select(func.count()).select_from(UserProviderPreference)) or 0
+    return request.app.state.templates.TemplateResponse(
+        "admin_providers.html",
+        template_context(request, providers=providers, preference_count=preference_count),
+    )
+
+
+@router.post("/providers/{provider_id}/toggle")
+def admin_toggle_provider(request: Request, provider_id: str):
+    if not require_admin(request):
+        return RedirectResponse(url="/login", status_code=303)
+    with SessionLocal() as db:
+        provider = db.get(ExternalProvider, provider_id)
+        if provider:
+            provider.is_active = not provider.is_active
+            db.add(provider)
+            db.commit()
+    return RedirectResponse(url="/admin/providers", status_code=303)
 
 
 @router.get("/topics", response_class=HTMLResponse)
@@ -102,10 +191,7 @@ def admin_sources(request: Request):
     with SessionLocal() as db:
         topics = db.scalars(select(Topic).order_by(Topic.sort_order.asc(), Topic.name.asc())).all()
         sources = db.scalars(
-            select(Source)
-            .options(joinedload(Source.topic))
-            .order_by(Source.created_at.desc())
-            .limit(400)
+            select(Source).options(joinedload(Source.topic)).order_by(Source.created_at.desc()).limit(400)
         ).unique().all()
     return request.app.state.templates.TemplateResponse(
         "admin_sources.html", template_context(request, topics=topics, sources=sources)

@@ -37,6 +37,8 @@ def init_db() -> None:
     from app.models.topic import Topic
     from app.models.source import Source
     from app.models.article import Article
+    from app.models.brief import Brief
+    from app.models.provider import ExternalProvider, UserProviderPreference
     from app.models.subscription import UserTopicSubscription, UserArticleRead
     from app.models.session import UserSession
     from app.models.sync import SyncRun, SyncRunItem
@@ -50,6 +52,9 @@ def init_db() -> None:
         Topic.__table__,
         Source.__table__,
         Article.__table__,
+        Brief.__table__,
+        ExternalProvider.__table__,
+        UserProviderPreference.__table__,
         UserTopicSubscription.__table__,
         UserArticleRead.__table__,
         UserSession.__table__,

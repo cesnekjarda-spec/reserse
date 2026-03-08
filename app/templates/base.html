@@ -3,14 +3,18 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>{% block title %}Research Feed App{% endblock %}</title>
+  <title>{% block title %}Reserse{% endblock %}</title>
   <link rel="stylesheet" href="/static/app.css">
 </head>
 <body>
   <header class="site-header">
-    <div class="wrap nav">
-      <a class="brand" href="/">Research Feed App</a>
-      <nav>
+    <div class="wrap nav-shell">
+      <div>
+        <a class="brand" href="/">Reserse</a>
+        <div class="brand-subtitle">Monitorování témat, briefingy a admin review workflow</div>
+      </div>
+      <nav class="site-nav">
+        <a href="/">Úvod</a>
         {% if current_user %}
           {% if current_user.role == 'admin' %}<a href="/admin">Admin</a>{% endif %}
           <a href="/dashboard">Dashboard</a>
@@ -22,7 +26,7 @@
       </nav>
     </div>
   </header>
-  <main class="wrap">
+  <main class="wrap page-shell">
     {% block content %}{% endblock %}
   </main>
 </body>

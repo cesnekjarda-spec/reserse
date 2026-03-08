@@ -17,6 +17,9 @@ class Article(Base):
     guid_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True)
     external_guid: Mapped[str | None] = mapped_column(Text, nullable=True)
     summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    full_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    extraction_status: Mapped[str] = mapped_column(String(20), default="pending")
+    extracted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 

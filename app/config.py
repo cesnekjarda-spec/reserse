@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    app_name: str = "Research Feed App"
+    app_name: str = "Reserse"
     app_env: str = "development"
     base_url: str = "http://127.0.0.1:8000"
     database_url: str = "sqlite:///./app.db"
@@ -19,6 +19,9 @@ class Settings(BaseSettings):
 
     auto_seed_on_startup: bool = True
     auto_sync_on_startup: bool = False
+    brief_article_limit: int = 18
+    brief_fetch_limit: int = 5
+    article_fetch_timeout_seconds: int = 12
 
     model_config = SettingsConfigDict(
         env_file=".env",

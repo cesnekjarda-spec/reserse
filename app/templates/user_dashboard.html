@@ -1,9 +1,16 @@
 {% extends "base.html" %}
-{% block title %}Dashboard{% endblock %}
+{% block title %}Reserse · Dashboard{% endblock %}
 {% block content %}
+<section class="panel-header card-soft-accent">
+  <div>
+    <div class="eyebrow">Klientská část</div>
+    <h1>Briefingy, monitoring a externí launchery</h1>
+    <p>Vrstva 1 zobrazuje publikované briefingy. Vrstva 2 otevírá v novém okně navazující rešerši u vybraných providerů.</p>
+  </div>
+</section>
+
 <section class="card">
-  <h1>Uživatelský dashboard</h1>
-  <p>Vyber témata, která chceš sledovat. Testovací účet <strong>User</strong> má po startu předplacena všechna témata.</p>
+  <div class="section-head"><div><div class="eyebrow">Nastavení</div><h2>Moje témata</h2></div></div>
   <form method="post" action="/dashboard/subscriptions" class="topic-checkboxes">
     {% for topic in topics %}
       <label class="checkbox-item"><input type="checkbox" name="topic_ids" value="{{ topic.id }}" {% if topic.id in selected_ids %}checked{% endif %}> {{ topic.name }}</label>
@@ -13,23 +20,107 @@
 </section>
 
 <section class="card">
-  <h2>Nejnovější články</h2>
+  <div class="section-head"><div><div class="eyebrow">Vrstva 2</div><h2>Moje externí nástroje</h2></div></div>
+  <form method="post" action="/dashboard/providers" class="topic-checkboxes">
+    {% for pref in provider_preferences %}
+      <label class="checkbox-item"><input type="checkbox" name="provider_ids" value="{{ pref.provider_id }}" {% if pref.is_enabled %}checked{% endif %}> {{ pref.provider.name if pref.provider else pref.provider_id }}</label>
+    {% endfor %}
+    <button class="btn btn-secondary" type="submit">Uložit providery</button>
+  </form>
+</section>
+
+<section class="card">
+  <div class="section-head"><div><div class="eyebrow">Vrstva 2</div><h2>Rychlé externí launchery podle témat</h2></div></div>
+  <div class="provider-grid">
+    {% for topic in selected_topics %}
+    <article class="topic-card">
+      <div class="topic-meta-row"><span class="topic-chip">{{ topic.name }}</span></div>
+      <p>Otevři navazující rešerši typu „5 nejnovějších a nejdůležitějších zpráv“ v preferovaných nástrojích.</p>
+      <div class="chip-row">
+        {% for link in topic_external_links.get(topic.id, []) %}
+          <a class="provider-link" href="{{ link.url }}" target="_blank" rel="noopener">{{ link.name }}</a>
+        {% endfor %}
+      </div>
+    </article>
+    {% else %}
+      <p class="muted">Vyber alespoň jedno téma, aby se vytvořily externí launchery.</p>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="card">
+  <div class="section-head"><div><div class="eyebrow">Vrstva 1</div><h2>Publikované briefingy</h2></div></div>
+  {% for brief in briefs %}
+    <article class="brief-card">
+      <div class="brief-card-topline">
+        <span class="topic-chip">{{ brief.topic.name if brief.topic else '' }}</span>
+        <span class="mini-meta">{{ brief.article_count }} článků · {{ brief.source_count }} zdrojů</span>
+      </div>
+      <h3>{{ brief.title }}</h3>
+      <p class="lead">{{ brief.summary }}</p>
+      <div class="brief-sections-grid">
+        <div class="brief-section">
+          <h4>Co se děje</h4>
+          <div class="preline">{{ brief.what_happened }}</div>
+        </div>
+        <div class="brief-section">
+          <h4>Proč je to důležité</h4>
+          <p>{{ brief.why_it_matters }}</p>
+        </div>
+        <div class="brief-section full">
+          <h4>Co dál sledovat</h4>
+          <p>{{ brief.watchlist }}</p>
+          <div class="chip-row">{% for point in brief.key_points %}<span class="keyword-chip">{{ point }}</span>{% endfor %}</div>
+        </div>
+      </div>
+      <div class="provider-link-row">
+        {% for link in brief_external_links.get(brief.id, []) %}
+          <a class="provider-link" href="{{ link.url }}" target="_blank" rel="noopener">{{ link.name }}</a>
+        {% endfor %}
+      </div>
+      {% if brief_related.get(brief.id) %}
+      <div class="related-links">
+        {% for article in brief_related.get(brief.id) %}
+          <a href="{{ article.url }}" target="_blank" rel="noopener">{{ article.title }}</a>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </article>
+  {% else %}
+    <p class="muted">Zatím tu nejsou publikované briefingy. Přihlas se jako admin, spusť RSS sync, vygeneruj drafty a publikuj je.</p>
+  {% endfor %}
+</section>
+
+<section class="card">
+  <div class="section-head"><div><div class="eyebrow">Zdrojové články</div><h2>Nejnovější článkový tok</h2></div></div>
   {% for article in articles %}
   <article class="article-card {% if article.id in read_ids %}read{% endif %}">
     <div class="article-meta">
       <span>{{ article.source.topic.name if article.source and article.source.topic else '' }}</span>
       <span>{{ article.published_at or article.created_at }}</span>
+      <span>{{ article.extraction_status }}</span>
     </div>
     <h3><a href="{{ article.url }}" target="_blank" rel="noopener">{{ article.title }}</a></h3>
     {% if article.summary %}<p>{{ article.summary }}</p>{% endif %}
+    {% if article.full_text %}<p class="muted">{{ article.full_text[:260] }}{% if article.full_text|length > 260 %}…{% endif %}</p>{% endif %}
+    {% if article.id in article_external_links %}
+      <details class="external-details">
+        <summary>Otevřít navazující rešerši v externím nástroji</summary>
+        <div class="provider-link-row">
+          {% for link in article_external_links.get(article.id, []) %}
+            <a class="provider-link" href="{{ link.url }}" target="_blank" rel="noopener">{{ link.name }}</a>
+          {% endfor %}
+        </div>
+      </details>
+    {% endif %}
     {% if article.id not in read_ids %}
     <form method="post" action="/articles/{{ article.id }}/read">
-      <button class="btn btn-light" type="submit">Označit jako přečtené</button>
+      <button class="btn btn-ghost" type="submit">Označit jako přečtené</button>
     </form>
     {% endif %}
   </article>
   {% else %}
-  <p>Zatím tu nejsou žádné články. Přihlas se jako admin a spusť RSS sync.</p>
+  <p class="muted">Zatím tu nejsou žádné články. Přihlas se jako admin a spusť RSS sync.</p>
   {% endfor %}
 </section>
 {% endblock %}
