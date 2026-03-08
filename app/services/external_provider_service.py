@@ -31,7 +31,7 @@ DEFAULT_EXTERNAL_PROVIDERS = [
         "code": "google-search",
         "name": "Google Search",
         "description": "Širší webový dotaz vhodný pro dohledání kontextu a primárních zdrojů.",
-        "url_template": "https://www.google.com/search?q={query}",
+        "url_template": "https://www.google.com/search?udm=50&q={query}",
         "sort_order": 3,
     },
     {
