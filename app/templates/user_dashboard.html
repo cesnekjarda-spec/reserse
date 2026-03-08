@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>Uživatelský dashboard</h1>
+  <p>Vyber témata, která chceš sledovat. Testovací účet <strong>User</strong> má po startu předplacena všechna témata.</p>
+  <form method="post" action="/dashboard/subscriptions" class="topic-checkboxes">
+    {% for topic in topics %}
+      <label class="checkbox-item"><input type="checkbox" name="topic_ids" value="{{ topic.id }}" {% if topic.id in selected_ids %}checked{% endif %}> {{ topic.name }}</label>
+    {% endfor %}
+    <button class="btn" type="submit">Uložit výběr</button>
+  </form>
+</section>
+
+<section class="card">
+  <h2>Nejnovější články</h2>
+  {% for article in articles %}
+  <article class="article-card {% if article.id in read_ids %}read{% endif %}">
+    <div class="article-meta">
+      <span>{{ article.source.topic.name if article.source and article.source.topic else '' }}</span>
+      <span>{{ article.published_at or article.created_at }}</span>
+    </div>
+    <h3><a href="{{ article.url }}" target="_blank" rel="noopener">{{ article.title }}</a></h3>
+    {% if article.summary %}<p>{{ article.summary }}</p>{% endif %}
+    {% if article.id not in read_ids %}
+    <form method="post" action="/articles/{{ article.id }}/read">
+      <button class="btn btn-light" type="submit">Označit jako přečtené</button>
+    </form>
+    {% endif %}
+  </article>
+  {% else %}
+  <p>Zatím tu nejsou žádné články. Přihlas se jako admin a spusť RSS sync.</p>
+  {% endfor %}
+</section>
+{% endblock %}

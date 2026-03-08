@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Přihlášení{% endblock %}
+{% block content %}
+<section class="card auth-card">
+  <h1>Přihlášení</h1>
+  <p>Použij uživatelské jméno nebo e-mail.</p>
+  {% if error %}<p class="error">{{ error }}</p>{% endif %}
+  <form method="post" class="stack">
+    <label>Jméno nebo e-mail<input type="text" name="identity" required></label>
+    <label>Heslo<input type="password" name="password" required></label>
+    <button class="btn" type="submit">Přihlásit</button>
+  </form>
+  <hr>
+  <p><strong>Admin:</strong> Admin / Ahojky12345</p>
+  <p><strong>User:</strong> User / Ahojky54321</p>
+</section>
+{% endblock %}
