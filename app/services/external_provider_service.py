@@ -21,25 +21,39 @@ DEFAULT_EXTERNAL_PROVIDERS = [
         "sort_order": 1,
     },
     {
-        "code": "bing-news",
-        "name": "Bing News",
-        "description": "Alternativní zprávový přehled ve vyhledávání Bing.",
-        "url_template": "https://www.bing.com/news/search?q={query}",
-        "sort_order": 2,
-    },
-    {
         "code": "google-search",
-        "name": "Google Search",
-        "description": "Širší webový dotaz vhodný pro dohledání kontextu a primárních zdrojů.",
+        "name": "Google AI",
+        "description": "Širší webový dotaz v Google AI Mode.",
         "url_template": "https://www.google.com/search?udm=50&q={query}",
-        "sort_order": 3,
+        "sort_order": 2,
     },
     {
         "code": "perplexity-search",
         "name": "Perplexity Search",
-        "description": "Best-effort otevření rešeršního vyhledávání v novém okně.",
+        "description": "Rešeršní dotaz v Perplexity.",
         "url_template": "https://www.perplexity.ai/search/?q={query}",
+        "sort_order": 3,
+    },
+    {
+        "code": "kagi-assistant",
+        "name": "Kagi Assistant",
+        "description": "AI rešeršní dotaz v Kagi Assistantu s webovým kontextem.",
+        "url_template": "https://kagi.com/assistant?internet=true&q={query}",
         "sort_order": 4,
+    },
+    {
+        "code": "kagi-search",
+        "name": "Kagi Search",
+        "description": "Klasické vyhledávání v Kagi pro rychlé ověření a dohledání zdrojů.",
+        "url_template": "https://kagi.com/search?q={query}",
+        "sort_order": 5,
+    },
+    {
+        "code": "microsoft-copilot",
+        "name": "Microsoft Copilot",
+        "description": "AI dotaz v Copilotu; vhodné i pro hlas / read aloud.",
+        "url_template": "https://copilot.microsoft.com/?q={query}",
+        "sort_order": 6,
     },
 ]
 
@@ -59,7 +73,12 @@ def ensure_external_providers(db: Session) -> None:
 
 
 def ensure_user_provider_preferences(db: Session, user: User) -> None:
-    providers = db.scalars(select(ExternalProvider).where(ExternalProvider.is_active.is_(True)).order_by(ExternalProvider.sort_order.asc())).all()
+    providers = db.scalars(
+        select(ExternalProvider)
+        .where(ExternalProvider.is_active.is_(True))
+        .order_by(ExternalProvider.sort_order.asc())
+    ).all()
+
     for provider in providers:
         preference = db.scalar(
             select(UserProviderPreference).where(
@@ -100,17 +119,24 @@ def save_user_provider_preferences(db: Session, user: User, enabled_provider_ids
 
 def get_enabled_providers_for_user(db: Session, user: User) -> list[ExternalProvider]:
     preferences = get_user_provider_preferences(db, user)
-    enabled = [pref.provider for pref in preferences if pref.is_enabled and pref.provider and pref.provider.is_active]
-    return enabled
+    return [
+        pref.provider
+        for pref in preferences
+        if pref.is_enabled and pref.provider and pref.provider.is_active
+    ]
 
 
 def build_topic_prompt(topic: Topic | str, mode: str = "topic") -> str:
     topic_name = topic.name if hasattr(topic, "name") else str(topic)
+
     if mode == "topic":
         return (
-            f"Vytvoř operativní rešerši k tématu {topic_name}. Zaměř se na 5 nejnovějších a nejdůležitějších zpráv, "
-            f"u každé napiš co se stalo, proč je to důležité a co sledovat dál. Preferuj důvěryhodné zdroje a posledních 7 dní."
+            f"Vytvoř operativní rešerši k tématu {topic_name}. "
+            f"Zaměř se na 5 nejnovějších a nejdůležitějších zpráv, "
+            f"u každé napiš co se stalo, proč je to důležité a co sledovat dál. "
+            f"Preferuj důvěryhodné zdroje a posledních 7 dní."
         )
+
     return f"Shrň hlavní vývoj v tématu {topic_name} za posledních 7 dní."
 
 
@@ -118,8 +144,10 @@ def build_brief_prompt(brief: Brief) -> str:
     points = "; ".join(brief.key_points[:4])
     topic_name = brief.topic.name if brief.topic else "dané téma"
     return (
-        f"Navaz na briefing k tématu {topic_name}. Pracuj s okruhy {points}. "
-        f"Rozšiř rešerši o kontext, dopady a protichůdné interpretace, ale drž se posledních 7 dní a důvěryhodných zdrojů."
+        f"Navaz na briefing k tématu {topic_name}. "
+        f"Pracuj s okruhy {points}. "
+        f"Rozšiř rešerši o kontext, dopady a protichůdné interpretace, "
+        f"ale drž se posledních 7 dní a důvěryhodných zdrojů."
     )
 
 
