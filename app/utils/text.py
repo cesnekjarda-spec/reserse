@@ -33,6 +33,12 @@ def normalize_word(value: str) -> str:
     return value.lower()
 
 
+def normalize_whitespace(value: str | None) -> str:
+    if not value:
+        return ""
+    return re.sub(r"\s+", " ", value).strip()
+
+
 def tokenize(value: str) -> list[str]:
     words = re.findall(r"[\w\-]{3,}", value.lower(), flags=re.UNICODE)
     cleaned: list[str] = []
@@ -48,9 +54,14 @@ def tokenize(value: str) -> list[str]:
     return cleaned
 
 
-def extract_keywords(texts: list[str], limit: int = 8) -> list[str]:
+def extract_keywords(texts: str | list[str], limit: int = 8) -> list[str]:
+    if isinstance(texts, str):
+        texts = [texts]
+
     counter: Counter[str] = Counter()
     for text in texts:
+        if not text:
+            continue
         counter.update(tokenize(text))
     return [word for word, _ in counter.most_common(limit)]
 
@@ -58,13 +69,13 @@ def extract_keywords(texts: list[str], limit: int = 8) -> list[str]:
 def shorten_text(value: str | None, width: int = 180) -> str:
     if not value:
         return ""
-    return textwrap.shorten(re.sub(r"\s+", " ", value).strip(), width=width, placeholder="…")
+    return textwrap.shorten(normalize_whitespace(value), width=width, placeholder="…")
 
 
 def split_sentences(value: str | None) -> list[str]:
     if not value:
         return []
-    parts = re.split(r"(?<=[\.!?])\s+", re.sub(r"\s+", " ", value).strip())
+    parts = re.split(r"(?<=[\.!?])\s+", normalize_whitespace(value))
     return [part.strip() for part in parts if len(part.strip()) > 30]
 
 
@@ -81,11 +92,3 @@ def domain_from_url(url: str | None) -> str:
     if not url:
         return ""
     return (urlparse(url).netloc or "").replace("www.", "")
-
-import re
-
-def normalize_whitespace(value: str | None) -> str:
-    if not value:
-        return ""
-    return re.sub(r"\s+", " ", value).strip()
-
