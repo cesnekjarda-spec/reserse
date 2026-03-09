@@ -81,3 +81,11 @@ def domain_from_url(url: str | None) -> str:
     if not url:
         return ""
     return (urlparse(url).netloc or "").replace("www.", "")
+
+import re
+
+def normalize_whitespace(value: str | None) -> str:
+    if not value:
+        return ""
+    return re.sub(r"\s+", " ", value).strip()
+
