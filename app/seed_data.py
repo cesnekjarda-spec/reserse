@@ -2,7 +2,7 @@ SEED_TOPICS = [
   {
     "name": "AI a automatizace",
     "description": "Umělá inteligence, automatizace, LLM, agenti a AI regulace.",
-    "price_czk": 49,
+    "price_czk": 1,
     "sort_order": 1,
     "sources": [
       {
@@ -60,7 +60,7 @@ SEED_TOPICS = [
   {
     "name": "Kyberbezpečnost",
     "description": "Ransomware, úniky dat, identita, cloud security a NIS2.",
-    "price_czk": 49,
+    "price_czk": 1,
     "sort_order": 2,
     "sources": [
       {
@@ -118,7 +118,7 @@ SEED_TOPICS = [
   {
     "name": "Vývoj software",
     "description": "Programování, DevOps, API, testování a open source.",
-    "price_czk": 45,
+    "price_czk": 1,
     "sort_order": 3,
     "sources": [
       {
@@ -176,7 +176,7 @@ SEED_TOPICS = [
   {
     "name": "Cloud a data",
     "description": "Cloud, data engineering, BI, observability a databáze.",
-    "price_czk": 45,
+    "price_czk": 1,
     "sort_order": 4,
     "sources": [
       {
@@ -234,7 +234,7 @@ SEED_TOPICS = [
   {
     "name": "Marketing a reklama",
     "description": "SEO, PPC, sociální sítě, brand a martech.",
-    "price_czk": 39,
+    "price_czk": 1,
     "sort_order": 5,
     "sources": [
       {
@@ -292,7 +292,7 @@ SEED_TOPICS = [
   {
     "name": "E-commerce a retail",
     "description": "Online prodej, marketplace, logistika a CX.",
-    "price_czk": 39,
+    "price_czk": 1,
     "sort_order": 6,
     "sources": [
       {
@@ -350,7 +350,7 @@ SEED_TOPICS = [
   {
     "name": "Finance a bankovnictví",
     "description": "Banky, platební řešení, pojištění a osobní finance.",
-    "price_czk": 49,
+    "price_czk": 1,
     "sort_order": 7,
     "sources": [
       {
@@ -408,7 +408,7 @@ SEED_TOPICS = [
   {
     "name": "Investice a trhy",
     "description": "Akcie, ETF, VC, IPO, komodity a výsledky firem.",
-    "price_czk": 55,
+    "price_czk": 1,
     "sort_order": 8,
     "sources": [
       {
@@ -466,7 +466,7 @@ SEED_TOPICS = [
   {
     "name": "Ekonomika a makro",
     "description": "Inflace, sazby, produktivita, supply chain a centrální banky.",
-    "price_czk": 49,
+    "price_czk": 1,
     "sort_order": 9,
     "sources": [
       {
@@ -524,7 +524,7 @@ SEED_TOPICS = [
   {
     "name": "Startupy a podnikání",
     "description": "SaaS, fundraising, provoz, produkt a škálování.",
-    "price_czk": 45,
+    "price_czk": 1,
     "sort_order": 10,
     "sources": [
       {
@@ -582,7 +582,7 @@ SEED_TOPICS = [
   {
     "name": "Právo a regulace",
     "description": "GDPR, AI Act, compliance, soutěžní a spotřebitelské právo.",
-    "price_czk": 45,
+    "price_czk": 1,
     "sort_order": 11,
     "sources": [
       {
@@ -640,7 +640,7 @@ SEED_TOPICS = [
   {
     "name": "HR a práce",
     "description": "Nábor, leadership, remote work, odměňování a pracovní právo.",
-    "price_czk": 35,
+    "price_czk": 1,
     "sort_order": 12,
     "sources": [
       {
@@ -698,7 +698,7 @@ SEED_TOPICS = [
   {
     "name": "Reality a development",
     "description": "Bydlení, hypotéky, komerční reality a stavebnictví.",
-    "price_czk": 45,
+    "price_czk": 1,
     "sort_order": 13,
     "sources": [
       {
@@ -756,7 +756,7 @@ SEED_TOPICS = [
   {
     "name": "Energetika",
     "description": "Elektřina, plyn, OZE, baterie, síť a energetická regulace.",
-    "price_czk": 49,
+    "price_czk": 1,
     "sort_order": 14,
     "sources": [
       {
@@ -814,7 +814,7 @@ SEED_TOPICS = [
   {
     "name": "Automotive a mobilita",
     "description": "Automobilky, elektromobilita, baterie a dopravní inovace.",
-    "price_czk": 39,
+    "price_czk": 1,
     "sort_order": 15,
     "sources": [
       {
@@ -872,7 +872,7 @@ SEED_TOPICS = [
   {
     "name": "Zdravotnictví a farmacie",
     "description": "Nemocnice, medtech, biotech, telemedicína a regulace léčiv.",
-    "price_czk": 49,
+    "price_czk": 1,
     "sort_order": 16,
     "sources": [
       {
@@ -930,7 +930,7 @@ SEED_TOPICS = [
   {
     "name": "Věda a výzkum",
     "description": "Výzkum, vesmír, klima, kvantové technologie a materiály.",
-    "price_czk": 39,
+    "price_czk": 1,
     "sort_order": 17,
     "sources": [
       {
@@ -988,7 +988,7 @@ SEED_TOPICS = [
   {
     "name": "Udržitelnost a ESG",
     "description": "Dekarbonizace, ESG reporting, cirkularita a biodiversity.",
-    "price_czk": 39,
+    "price_czk": 1,
     "sort_order": 18,
     "sources": [
       {
@@ -1046,7 +1046,7 @@ SEED_TOPICS = [
   {
     "name": "Geopolitika a veřejná politika",
     "description": "EU, obchodní politika, sankce, obrana a mezinárodní vztahy.",
-    "price_czk": 45,
+    "price_czk": 1,
     "sort_order": 19,
     "sources": [
       {
@@ -1104,7 +1104,7 @@ SEED_TOPICS = [
   {
     "name": "Média a digitální ekonomika",
     "description": "Streaming, adtech, platformy, gaming a předplatné.",
-    "price_czk": 39,
+    "price_czk": 1,
     "sort_order": 20,
     "sources": [
       {

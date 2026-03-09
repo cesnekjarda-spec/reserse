@@ -178,3 +178,14 @@ input, textarea, select {
 .provider-link:hover { background: #e3ecff; }
 .external-details { margin: 12px 0; }
 .external-details summary { cursor: pointer; color: var(--accent-strong); font-weight: 700; }
+
+
+.admin-create-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+.admin-create-grid .full { grid-column: 1 / -1; }
+.admin-topic-list { display:grid; gap: 16px; }
+.topic-edit-card { display:grid; gap:14px; padding:20px; border:1px solid var(--line); border-radius:20px; background: rgba(255,255,255,0.72); backdrop-filter: blur(10px); }
+.topic-edit-head, .topic-edit-actions, .wrap-actions { display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:space-between; }
+.topic-edit-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+.topic-edit-grid .full { grid-column: 1 / -1; }
+.switch-inline { display:flex; gap:8px; align-items:center; font-weight:600; }
+.compact-inline-form { display:flex; gap:10px; align-items:end; }
