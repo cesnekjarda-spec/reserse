@@ -10,7 +10,7 @@ from app.models.source import Source
 from app.models.topic import Topic
 from app.services.content_service import enrich_article_content
 from app.utils.security import utcnow
-from app.utils.text import extract_keywords, normalize_whitespace, shorten_text
+from app.utils.text import domain_from_url, extract_keywords, normalize_whitespace, shorten_text
 
 
 def _recent_topic_articles(db: Session, topic_id: str, limit: int | None = None) -> list[Article]:
@@ -40,12 +40,14 @@ def _ensure_content(db: Session, articles: list[Article]) -> list[Article]:
 
 def _build_structured_sections(topic: Topic, articles: list[Article]) -> dict:
     article_count = len(articles)
-    source_domains = []
+    source_domains: list[str] = []
     all_keywords: list[str] = []
     title_points: list[str] = []
 
     for article in articles:
-        domain = article.source.domain if article.source and article.source.domain else None
+        domain = ""
+        if article.source:
+            domain = domain_from_url(article.source.website_url or article.source.rss_url)
         if domain:
             source_domains.append(domain)
 
