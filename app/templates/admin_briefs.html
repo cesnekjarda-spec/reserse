@@ -41,6 +41,15 @@
         <div class="brief-block"><strong>Proč je to důležité</strong><div>{{ brief.why_it_matters }}</div></div>
         <div class="brief-block"><strong>Co dál sledovat</strong><div>{{ brief.watchlist }}</div></div>
         <div class="chip-row">{% for point in brief.key_points %}<span class="keyword-chip">{{ point }}</span>{% endfor %}</div>
+        <div class="hero-actions compact-actions">
+          <button
+            class="btn btn-secondary js-read-aloud"
+            type="button"
+            data-speech-text="{{ ('Téma ' ~ topic.name ~ '. ' ~ brief.title ~ '. Shrnutí. ' ~ brief.summary ~ '. Co se děje. ' ~ brief.what_happened ~ '. Proč je to důležité. ' ~ brief.why_it_matters ~ '. Co dál sledovat. ' ~ brief.watchlist)|replace('\n', ' ')|e }}"
+          >
+            Přečíst briefing nahlas
+          </button>
+        </div>
       {% endif %}
       <div class="hero-actions wrap-actions">
         <form method="post" action="/admin/briefs/generate/{{ topic.id }}"><button class="btn btn-ghost" type="submit">Regenerovat</button></form>

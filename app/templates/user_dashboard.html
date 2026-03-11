@@ -73,6 +73,17 @@
           <div class="chip-row">{% for point in brief.key_points %}<span class="keyword-chip">{{ point }}</span>{% endfor %}</div>
         </div>
       </div>
+
+      <div class="hero-actions compact-actions">
+        <button
+          class="btn btn-secondary js-read-aloud"
+          type="button"
+          data-speech-text="{{ ('Téma ' ~ (brief.topic.name if brief.topic else '') ~ '. ' ~ brief.title ~ '. Shrnutí. ' ~ brief.summary ~ '. Co se děje. ' ~ brief.what_happened ~ '. Proč je to důležité. ' ~ brief.why_it_matters ~ '. Co dál sledovat. ' ~ brief.watchlist)|replace('\n', ' ')|e }}"
+        >
+          Přečíst briefing nahlas
+        </button>
+      </div>
+
       <div class="provider-link-row">
         {% for link in brief_external_links.get(brief.id, []) %}
           <a class="provider-link" href="{{ link.url }}" target="_blank" rel="noopener">{{ link.name }}</a>

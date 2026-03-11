@@ -48,17 +48,12 @@ DEFAULT_EXTERNAL_PROVIDERS = [
         "url_template": "https://kagi.com/search?q={query}",
         "sort_order": 5,
     },
-    {
-        "code": "microsoft-copilot",
-        "name": "Microsoft Copilot",
-        "description": "AI dotaz v Copilotu; vhodné i pro hlas / read aloud.",
-        "url_template": "https://www.bing.com/chat?q={query}&sendquery=1",
-        "sort_order": 6,
-    },
 ]
 
 
 def ensure_external_providers(db: Session) -> None:
+    active_codes = {item["code"] for item in DEFAULT_EXTERNAL_PROVIDERS}
+
     for item in DEFAULT_EXTERNAL_PROVIDERS:
         provider = db.scalar(select(ExternalProvider).where(ExternalProvider.code == item["code"]))
         if not provider:
@@ -69,6 +64,16 @@ def ensure_external_providers(db: Session) -> None:
         provider.sort_order = item["sort_order"]
         provider.is_active = True
         db.add(provider)
+
+    stale_copilot = db.scalar(select(ExternalProvider).where(ExternalProvider.code == "microsoft-copilot"))
+    if stale_copilot:
+        db.delete(stale_copilot)
+
+    providers = db.scalars(select(ExternalProvider)).all()
+    for provider in providers:
+        if provider.code not in active_codes and provider.code != "microsoft-copilot":
+            continue
+
     db.commit()
 
 
