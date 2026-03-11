@@ -52,7 +52,7 @@ DEFAULT_EXTERNAL_PROVIDERS = [
         "code": "microsoft-copilot",
         "name": "Microsoft Copilot",
         "description": "AI dotaz v Copilotu; vhodné i pro hlas / read aloud.",
-        "url_template": "https://copilot.microsoft.com/?q={query}",
+        "url_template": "https://www.bing.com/chat?q={query}&sendquery=1",
         "sort_order": 6,
     },
 ]
