@@ -9,14 +9,14 @@ from app.models.brief import Brief
 from app.models.provider import ExternalProvider, UserProviderPreference
 from app.models.topic import Topic
 from app.models.user import User
-from app.utils.text import shorten_text
+from app.utils.text import extract_keywords, shorten_text
 
 
 DEFAULT_EXTERNAL_PROVIDERS = [
     {
         "code": "google-news",
         "name": "Google News",
-        "description": "Otevře tematický dotaz ve zprávách.",
+        "description": "Otevře stručný keyword dotaz ve zprávách.",
         "url_template": "https://news.google.com/search?q={query}&hl=cs&gl=CZ&ceid=CZ:cs",
         "sort_order": 1,
     },
@@ -65,9 +65,11 @@ def ensure_external_providers(db: Session) -> None:
         provider.is_active = True
         db.add(provider)
 
-    stale_copilot = db.scalar(select(ExternalProvider).where(ExternalProvider.code == "microsoft-copilot"))
-    if stale_copilot:
-        db.delete(stale_copilot)
+    stale_codes = {"microsoft-copilot", "bing-news"}
+    for stale_code in stale_codes:
+        stale = db.scalar(select(ExternalProvider).where(ExternalProvider.code == stale_code))
+        if stale:
+            db.delete(stale)
 
     db.commit()
 
@@ -126,6 +128,11 @@ def get_enabled_providers_for_user(db: Session, user: User) -> list[ExternalProv
     ]
 
 
+def _keyword_query(text: str, limit: int = 6) -> str:
+    keywords = extract_keywords(text, limit=limit)
+    return " ".join(keywords) if keywords else text
+
+
 def build_topic_prompt(topic: Topic | str, mode: str = "topic") -> str:
     topic_name = topic.name if hasattr(topic, "name") else str(topic)
 
@@ -160,4 +167,11 @@ def build_article_prompt(topic_name: str, article_title: str, article_summary: s
 
 
 def build_provider_url(provider: ExternalProvider, prompt: str) -> str:
-    return provider.url_template.replace("{query}", quote_plus(prompt))
+    if provider.code in {"google-news", "kagi-search"}:
+        query = _keyword_query(prompt, limit=6)
+    elif provider.code == "google-search":
+        query = prompt
+    else:
+        query = prompt
+
+    return provider.url_template.replace("{query}", quote_plus(query))
