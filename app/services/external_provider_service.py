@@ -45,8 +45,6 @@ DEFAULT_EXTERNAL_PROVIDERS = [
 
 
 def ensure_external_providers(db: Session) -> None:
-    active_codes = {item["code"] for item in DEFAULT_EXTERNAL_PROVIDERS}
-
     for item in DEFAULT_EXTERNAL_PROVIDERS:
         provider = db.scalar(select(ExternalProvider).where(ExternalProvider.code == item["code"]))
         if not provider:
@@ -58,8 +56,7 @@ def ensure_external_providers(db: Session) -> None:
         provider.is_active = True
         db.add(provider)
 
-    stale_codes = {"google-news", "bing-news", "microsoft-copilot"}
-    for stale_code in stale_codes:
+    for stale_code in {"google-news", "bing-news", "microsoft-copilot"}:
         stale = db.scalar(select(ExternalProvider).where(ExternalProvider.code == stale_code))
         if stale:
             db.delete(stale)

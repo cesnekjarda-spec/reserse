@@ -73,7 +73,6 @@
           <div class="chip-row">{% for point in brief.key_points %}<span class="keyword-chip">{{ point }}</span>{% endfor %}</div>
         </div>
       </div>
-
       <div class="hero-actions compact-actions">
         <button
           class="btn btn-secondary js-read-aloud"
@@ -82,8 +81,8 @@
         >
           Přečíst briefing nahlas
         </button>
+        <a class="btn btn-ghost" href="/briefs/{{ brief.id }}/audio.mp3" target="_blank" rel="noopener">Audio rešerše MP3</a>
       </div>
-
       <div class="provider-link-row">
         {% for link in brief_external_links.get(brief.id, []) %}
           <a class="provider-link" href="{{ link.url }}" target="_blank" rel="noopener">{{ link.name }}</a>

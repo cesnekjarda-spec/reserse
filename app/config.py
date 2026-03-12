@@ -23,6 +23,11 @@ class Settings(BaseSettings):
     brief_fetch_limit: int = 5
     article_fetch_timeout_seconds: int = 12
 
+    gemini_api_key: str | None = None
+    gemini_model: str = "gemini-2.5-flash"
+    audio_tts_lang: str = "cs"
+    audio_url_limit: int = 3
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

@@ -30,69 +30,51 @@
     {% block content %}{% endblock %}
   </main>
 
-  <script>
-    (function () {
-      let activeButton = null;
-
-      function stopReading() {
-        if (!window.speechSynthesis) return;
-        window.speechSynthesis.cancel();
-        if (activeButton) {
-          activeButton.textContent = "Přečíst briefing nahlas";
-          activeButton.dataset.reading = "0";
-        }
-        activeButton = null;
-      }
-
-      function pickVoice() {
-        const voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
-        return (
-          voices.find(v => (v.lang || "").toLowerCase().startsWith("cs")) ||
-          voices.find(v => (v.lang || "").toLowerCase().startsWith("sk")) ||
-          voices[0] ||
-          null
-        );
-      }
-
-      document.addEventListener("click", function (event) {
-        const button = event.target.closest(".js-read-aloud");
-        if (!button) return;
-
-        if (!window.speechSynthesis) {
-          alert("Tento prohlížeč nepodporuje čtení nahlas.");
-          return;
-        }
-
-        const text = (button.dataset.speechText || "").trim();
-        if (!text) return;
-
-        if (button.dataset.reading === "1") {
-          stopReading();
-          return;
-        }
-
-        stopReading();
-
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = "cs-CZ";
-        utterance.rate = 1;
-        utterance.pitch = 1;
-
-        const voice = pickVoice();
-        if (voice) utterance.voice = voice;
-
-        utterance.onend = stopReading;
-        utterance.onerror = stopReading;
-
-        activeButton = button;
-        button.dataset.reading = "1";
-        button.textContent = "Zastavit čtení";
-
-        window.speechSynthesis.speak(utterance);
-      });
-
-      window.addEventListener("beforeunload", stopReading);
-    })();
-  </script>
+<script>
+(function () {
+  let activeButton = null;
+  function stopReading() {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    if (activeButton) {
+      activeButton.textContent = "Přečíst briefing nahlas";
+      activeButton.dataset.reading = "0";
+    }
+    activeButton = null;
+  }
+  function pickVoice() {
+    const voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+    return voices.find(v => (v.lang || "").toLowerCase().startsWith("cs")) || voices.find(v => (v.lang || "").toLowerCase().startsWith("sk")) || voices[0] || null;
+  }
+  document.addEventListener("click", function (event) {
+    const button = event.target.closest(".js-read-aloud");
+    if (!button) return;
+    if (!window.speechSynthesis) {
+      alert("Tento prohlížeč nepodporuje čtení nahlas.");
+      return;
+    }
+    const text = (button.dataset.speechText || "").trim();
+    if (!text) return;
+    if (button.dataset.reading === "1") {
+      stopReading();
+      return;
+    }
+    stopReading();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "cs-CZ";
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    const voice = pickVoice();
+    if (voice) utterance.voice = voice;
+    utterance.onend = stopReading;
+    utterance.onerror = stopReading;
+    activeButton = button;
+    button.dataset.reading = "1";
+    button.textContent = "Zastavit čtení";
+    window.speechSynthesis.speak(utterance);
+  });
+  window.addEventListener("beforeunload", stopReading);
+})();
+</script>
 </body>
 </html>

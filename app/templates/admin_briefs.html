@@ -7,7 +7,19 @@
     <h1>Draft briefingy</h1>
     <p>Odtud můžeš briefingy generovat po tématech, hromadně vyrenderovat a jedním klikem je publikovat pro uživatele.</p>
   </div>
-  <div class="hero-actions wrap-actions">
+  <div class="hero-actions compact-actions">
+          {% if brief %}
+          <button
+            class="btn btn-secondary js-read-aloud"
+            type="button"
+            data-speech-text="{{ ('Téma ' ~ topic.name ~ '. ' ~ brief.title ~ '. Shrnutí. ' ~ brief.summary ~ '. Co se děje. ' ~ brief.what_happened ~ '. Proč je to důležité. ' ~ brief.why_it_matters ~ '. Co dál sledovat. ' ~ brief.watchlist)|replace('\n', ' ')|e }}"
+          >
+            Přečíst briefing nahlas
+          </button>
+          <a class="btn btn-ghost" href="/briefs/{{ brief.id }}/audio.mp3" target="_blank" rel="noopener">Audio rešerše MP3</a>
+          {% endif %}
+        </div>
+        <div class="hero-actions wrap-actions">
     <form method="post" action="/admin/briefs/generate-all"><button class="btn" type="submit">AutoRender all</button></form>
     <form method="post" action="/admin/briefs/publish-all"><button class="btn btn-secondary" type="submit">Publikovat vše</button></form>
     <form method="post" action="/admin/briefs/render-publish-all"><button class="btn btn-ghost" type="submit">AutoRender + publikovat vše</button></form>
@@ -41,15 +53,6 @@
         <div class="brief-block"><strong>Proč je to důležité</strong><div>{{ brief.why_it_matters }}</div></div>
         <div class="brief-block"><strong>Co dál sledovat</strong><div>{{ brief.watchlist }}</div></div>
         <div class="chip-row">{% for point in brief.key_points %}<span class="keyword-chip">{{ point }}</span>{% endfor %}</div>
-        <div class="hero-actions compact-actions">
-          <button
-            class="btn btn-secondary js-read-aloud"
-            type="button"
-            data-speech-text="{{ ('Téma ' ~ topic.name ~ '. ' ~ brief.title ~ '. Shrnutí. ' ~ brief.summary ~ '. Co se děje. ' ~ brief.what_happened ~ '. Proč je to důležité. ' ~ brief.why_it_matters ~ '. Co dál sledovat. ' ~ brief.watchlist)|replace('\n', ' ')|e }}"
-          >
-            Přečíst briefing nahlas
-          </button>
-        </div>
       {% endif %}
       <div class="hero-actions wrap-actions">
         <form method="post" action="/admin/briefs/generate/{{ topic.id }}"><button class="btn btn-ghost" type="submit">Regenerovat</button></form>

@@ -23,3 +23,10 @@ Vlastní briefing engine doplněný o externí launchery s deep-link dotazy.
 
 ## Důležité
 Použij novou / čistou databázi. Tento checkpoint předpokládá čisté schema.
+
+
+## Volitelné audio rešerše z URL
+
+Aplikace umí na vyžádání vytvořit MP3 audio rešerši z publikovaného briefingu.
+Pokud nastavíš `GEMINI_API_KEY`, použije se Gemini URL Context nad několika veřejnými URL článků spojených s briefem a výsledek se převede do MP3 bez trvalého ukládání na server.
+Když API klíč nenastavíš, vygeneruje se audio z interního briefingu jako fallback.

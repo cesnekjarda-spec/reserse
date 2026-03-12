@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Form, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from sqlalchemy import desc, select
 from sqlalchemy.orm import joinedload
+
+from io import BytesIO
 
 from app.db import SessionLocal
 from app.models.article import Article
@@ -9,6 +11,7 @@ from app.models.brief import Brief
 from app.models.source import Source
 from app.models.subscription import UserArticleRead, UserTopicSubscription
 from app.models.topic import Topic
+from app.services.audio_service import build_audio_research_text, synthesize_mp3_bytes
 from app.services.external_provider_service import (
     build_article_prompt,
     build_brief_prompt,
@@ -142,6 +145,38 @@ def dashboard(request: Request):
         ),
     )
 
+
+
+
+@router.get("/briefs/{brief_id}/audio.mp3")
+def brief_audio(request: Request, brief_id: str):
+    current_user = require_user(request)
+    if not current_user:
+        return RedirectResponse(url="/login", status_code=303)
+
+    with SessionLocal() as db:
+        brief = db.scalar(select(Brief).options(joinedload(Brief.topic)).where(Brief.id == brief_id))
+        if not brief:
+            return RedirectResponse(url="/dashboard", status_code=303)
+        if current_user.role != "admin" and brief.status != "published":
+            return RedirectResponse(url="/dashboard", status_code=303)
+
+        related_rows = []
+        if brief.article_ids:
+            related_rows = db.scalars(
+                select(Article)
+                .options(joinedload(Article.source).joinedload(Source.topic))
+                .where(Article.id.in_(brief.article_ids))
+            ).unique().all()
+
+        audio_text = build_audio_research_text(brief, related_rows)
+        mp3_bytes = synthesize_mp3_bytes(audio_text)
+        filename = f"briefing-{brief.id}.mp3"
+        return StreamingResponse(
+            BytesIO(mp3_bytes),
+            media_type="audio/mpeg",
+            headers={"Content-Disposition": f'inline; filename="{filename}"'},
+        )
 
 @router.post("/dashboard/subscriptions")
 def update_subscriptions(request: Request, topic_ids: list[str] = Form(default=[])):

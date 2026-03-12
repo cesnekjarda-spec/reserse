@@ -1,3 +1,5 @@
+from urllib.parse import quote_plus
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -34,6 +36,99 @@ def ensure_system_accounts(db: Session) -> None:
     ensure_user_provider_preferences(db, normal_user)
 
 
+def _google_news_source(name: str, query: str) -> dict:
+    encoded = quote_plus(query)
+    return {
+        "name": name,
+        "website_url": f"https://news.google.com/search?q={encoded}&hl=cs&gl=CZ&ceid=CZ:cs",
+        "rss_url": f"https://news.google.com/rss/search?q={encoded}&hl=cs&gl=CZ&ceid=CZ:cs",
+    }
+
+
+def _direct_sources_for_topic(topic_name: str) -> list[dict]:
+    slug = slugify(topic_name)
+    shared: list[dict] = [
+        _google_news_source(f"Google News – Reuters focus – {topic_name}", f'{topic_name} site:reuters.com'),
+        _google_news_source(f"Google News – AP focus – {topic_name}", f'{topic_name} site:apnews.com'),
+    ]
+
+    mapping = {
+        "ai-a-automatizace": [
+            {
+                "name": "The Register – AI + ML",
+                "website_url": "https://www.theregister.com/Design/page/feeds.html",
+                "rss_url": "https://www.theregister.com/software/ai_ml/headlines.atom",
+            },
+        ],
+        "kyberbezpecnost": [
+            {
+                "name": "The Register – Security",
+                "website_url": "https://www.theregister.com/Design/page/feeds.html",
+                "rss_url": "https://www.theregister.com/security/headlines.atom",
+            },
+        ],
+        "vyvoj-software": [
+            {
+                "name": "The Register – DevOps",
+                "website_url": "https://www.theregister.com/Design/page/feeds.html",
+                "rss_url": "https://www.theregister.com/software/devops/headlines.atom",
+            },
+            {
+                "name": "The Register – AI + ML",
+                "website_url": "https://www.theregister.com/Design/page/feeds.html",
+                "rss_url": "https://www.theregister.com/software/ai_ml/headlines.atom",
+            },
+        ],
+        "ekonomika-a-makro": [
+            {
+                "name": "ECB – Press releases",
+                "website_url": "https://www.ecb.europa.eu/home/html/rss.en.html",
+                "rss_url": "https://www.ecb.europa.eu/rss/press.html",
+            },
+            {
+                "name": "ECB – Statistical press releases",
+                "website_url": "https://www.ecb.europa.eu/home/html/rss.en.html",
+                "rss_url": "https://www.ecb.europa.eu/rss/statpress.html",
+            },
+        ],
+        "finance-a-bankovnictvi": [
+            {
+                "name": "ECB – Press releases",
+                "website_url": "https://www.ecb.europa.eu/home/html/rss.en.html",
+                "rss_url": "https://www.ecb.europa.eu/rss/press.html",
+            },
+        ],
+        "investice-a-trhy": [
+            {
+                "name": "ECB – Research bulletin",
+                "website_url": "https://www.ecb.europa.eu/home/html/rss.en.html",
+                "rss_url": "https://www.ecb.europa.eu/rss/rbu.html",
+            },
+            {
+                "name": "ECB – Press releases",
+                "website_url": "https://www.ecb.europa.eu/home/html/rss.en.html",
+                "rss_url": "https://www.ecb.europa.eu/rss/press.html",
+            },
+        ],
+        "geopolitika-a-verejna-politika": [
+            {
+                "name": "ECB – Press releases",
+                "website_url": "https://www.ecb.europa.eu/home/html/rss.en.html",
+                "rss_url": "https://www.ecb.europa.eu/rss/press.html",
+            },
+        ],
+        "pravo-a-regulace": [
+            {
+                "name": "ECB – Press releases",
+                "website_url": "https://www.ecb.europa.eu/home/html/rss.en.html",
+                "rss_url": "https://www.ecb.europa.eu/rss/press.html",
+            },
+        ],
+    }
+    shared.extend(mapping.get(slug, []))
+    return shared
+
+
 def ensure_seed_topics_and_sources(db: Session) -> None:
     for topic_item in SEED_TOPICS:
         slug = slugify(topic_item["name"])
@@ -58,7 +153,8 @@ def ensure_seed_topics_and_sources(db: Session) -> None:
             db.add(topic)
             db.commit()
 
-        for source_item in topic_item.get("sources", []):
+        source_items = list(topic_item.get("sources", [])) + _direct_sources_for_topic(topic_item["name"])
+        for source_item in source_items:
             existing = db.scalar(
                 select(Source).where(Source.topic_id == topic.id, Source.rss_url == source_item["rss_url"])
             )
