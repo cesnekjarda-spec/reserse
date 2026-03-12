@@ -69,11 +69,6 @@ def ensure_external_providers(db: Session) -> None:
     if stale_copilot:
         db.delete(stale_copilot)
 
-    providers = db.scalars(select(ExternalProvider)).all()
-    for provider in providers:
-        if provider.code not in active_codes and provider.code != "microsoft-copilot":
-            continue
-
     db.commit()
 
 

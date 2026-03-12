@@ -32,8 +32,17 @@
 
   <script>
     (function () {
-      let activeUtterance = null;
       let activeButton = null;
+
+      function stopReading() {
+        if (!window.speechSynthesis) return;
+        window.speechSynthesis.cancel();
+        if (activeButton) {
+          activeButton.textContent = "Přečíst briefing nahlas";
+          activeButton.dataset.reading = "0";
+        }
+        activeButton = null;
+      }
 
       function pickVoice() {
         const voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
@@ -43,17 +52,6 @@
           voices[0] ||
           null
         );
-      }
-
-      function stopReading() {
-        if (!window.speechSynthesis) return;
-        window.speechSynthesis.cancel();
-        if (activeButton) {
-          activeButton.textContent = "Přečíst briefing nahlas";
-          activeButton.dataset.reading = "0";
-        }
-        activeUtterance = null;
-        activeButton = null;
       }
 
       document.addEventListener("click", function (event) {
@@ -86,7 +84,6 @@
         utterance.onend = stopReading;
         utterance.onerror = stopReading;
 
-        activeUtterance = utterance;
         activeButton = button;
         button.dataset.reading = "1";
         button.textContent = "Zastavit čtení";
@@ -95,9 +92,6 @@
       });
 
       window.addEventListener("beforeunload", stopReading);
-      if (window.speechSynthesis && window.speechSynthesis.onvoiceschanged !== undefined) {
-        window.speechSynthesis.onvoiceschanged = function () {};
-      }
     })();
   </script>
 </body>
