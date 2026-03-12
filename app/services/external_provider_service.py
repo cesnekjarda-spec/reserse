@@ -9,44 +9,37 @@ from app.models.brief import Brief
 from app.models.provider import ExternalProvider, UserProviderPreference
 from app.models.topic import Topic
 from app.models.user import User
-from app.utils.text import extract_keywords, shorten_text
+from app.utils.text import shorten_text
 
 
 DEFAULT_EXTERNAL_PROVIDERS = [
-    {
-        "code": "google-news",
-        "name": "Google News",
-        "description": "Otevře stručný keyword dotaz ve zprávách.",
-        "url_template": "https://news.google.com/search?q={query}&hl=cs&gl=CZ&ceid=CZ:cs",
-        "sort_order": 1,
-    },
     {
         "code": "google-search",
         "name": "Google AI",
         "description": "Širší webový dotaz v Google AI Mode.",
         "url_template": "https://www.google.com/search?udm=50&q={query}",
-        "sort_order": 2,
+        "sort_order": 1,
     },
     {
         "code": "perplexity-search",
         "name": "Perplexity Search",
         "description": "Rešeršní dotaz v Perplexity.",
         "url_template": "https://www.perplexity.ai/search/?q={query}",
-        "sort_order": 3,
+        "sort_order": 2,
     },
     {
         "code": "kagi-assistant",
         "name": "Kagi Assistant",
         "description": "AI rešeršní dotaz v Kagi Assistantu s webovým kontextem.",
         "url_template": "https://kagi.com/assistant?internet=true&q={query}",
-        "sort_order": 4,
+        "sort_order": 3,
     },
     {
         "code": "kagi-search",
         "name": "Kagi Search",
         "description": "Klasické vyhledávání v Kagi pro rychlé ověření a dohledání zdrojů.",
         "url_template": "https://kagi.com/search?q={query}",
-        "sort_order": 5,
+        "sort_order": 4,
     },
 ]
 
@@ -65,7 +58,7 @@ def ensure_external_providers(db: Session) -> None:
         provider.is_active = True
         db.add(provider)
 
-    stale_codes = {"microsoft-copilot", "bing-news"}
+    stale_codes = {"google-news", "bing-news", "microsoft-copilot"}
     for stale_code in stale_codes:
         stale = db.scalar(select(ExternalProvider).where(ExternalProvider.code == stale_code))
         if stale:
@@ -128,11 +121,6 @@ def get_enabled_providers_for_user(db: Session, user: User) -> list[ExternalProv
     ]
 
 
-def _keyword_query(text: str, limit: int = 6) -> str:
-    keywords = extract_keywords(text, limit=limit)
-    return " ".join(keywords) if keywords else text
-
-
 def build_topic_prompt(topic: Topic | str, mode: str = "topic") -> str:
     topic_name = topic.name if hasattr(topic, "name") else str(topic)
 
@@ -167,11 +155,4 @@ def build_article_prompt(topic_name: str, article_title: str, article_summary: s
 
 
 def build_provider_url(provider: ExternalProvider, prompt: str) -> str:
-    if provider.code in {"google-news", "kagi-search"}:
-        query = _keyword_query(prompt, limit=6)
-    elif provider.code == "google-search":
-        query = prompt
-    else:
-        query = prompt
-
-    return provider.url_template.replace("{query}", quote_plus(query))
+    return provider.url_template.replace("{query}", quote_plus(prompt))
