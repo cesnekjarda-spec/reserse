@@ -7,7 +7,7 @@ from app.models.brief import Brief
 from app.utils.text import normalize_whitespace, shorten_text
 
 
-SUPPORTED_PROVIDER_CODES = {"exa-research", "perplexity-deep-research"}
+SUPPORTED_PROVIDER_CODES = {"exa-research", "tavily-research"}
 
 
 def _related_url_block(related_articles: list[Article]) -> str:
@@ -39,14 +39,14 @@ def build_external_research_prompt(brief: Brief, related_articles: list[Article]
         )
     return (
         base
-        + f" Proveď deep research, vyber nejdůležitější nové informace, zvaž i protichůdné interpretace a napiš výsledný report v češtině. "
+        + f" Proveď poctivou webovou rešerši, vyber nejdůležitější nové informace, zvaž i protichůdné interpretace a napiš výsledný report v češtině. "
         + f" V závěru uveď 3 až 5 bodů co sledovat dál. Klíčové body: {key_points}."
         + related_context
     )
 
 
 def build_provider_launcher_context(provider_code: str, prompt: str) -> dict:
-    provider_name = "Exa Research" if provider_code == "exa-research" else "Perplexity Deep Research"
+    provider_name = "Exa Research" if provider_code == "exa-research" else "Tavily Research"
     external_url = None
     helper_text = ""
     if provider_code == "exa-research":
@@ -54,11 +54,10 @@ def build_provider_launcher_context(provider_code: str, prompt: str) -> dict:
             "Tato větev je přidaná jako bezpečné rozhraní pro budoucí API napojení. "
             "Teď připravuje poctivý prompt a export textu bez zásahu do stávající funkční logiky."
         )
-    elif provider_code == "perplexity-deep-research":
-        external_url = f"https://www.perplexity.ai/search/?q={quote_plus(prompt)}"
+    elif provider_code == "tavily-research":
         helper_text = (
-            "Tato větev připravuje deep-research prompt. V případě potřeby jej můžeš otevřít i v Perplexity vyhledávání, "
-            "aniž by se měnila stávající logika aplikace."
+            "Tato větev připravuje poctivý research prompt pro budoucí Tavily API napojení. "
+            "Teď zůstává jako bezpečné rozšíření bez zásahu do stávající funkční logiky."
         )
     return {
         "provider_name": provider_name,
@@ -69,5 +68,5 @@ def build_provider_launcher_context(provider_code: str, prompt: str) -> dict:
 
 
 def build_launch_query(prompt: str, provider_code: str) -> str:
-    label = "Exa Research" if provider_code == "exa-research" else "Perplexity Deep Research"
+    label = "Exa Research" if provider_code == "exa-research" else "Tavily Research"
     return shorten_text(f"{label}: {prompt}", 1200)

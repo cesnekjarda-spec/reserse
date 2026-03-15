@@ -11,7 +11,7 @@ Vlastní briefing engine doplněný o externí launchery s deep-link dotazy.
 - FastAPI + Jinja2 webová aplikace
 - Neon / SQLite kompatibilní SQLAlchemy backend
 - bootstrap admin/user účtů
-- 20 témat + seed RSS zdroje
+- 50 témat + seed RSS zdroje
 - admin dashboard
 - uživatelský dashboard
 
@@ -36,6 +36,6 @@ Když API klíč nenastavíš, vygeneruje se audio z interního briefingu jako f
 ## Rozšíření v tomto checkpointu
 - původní funkční brief zůstal zachovaný
 - přidaný poslechový model briefu (`/briefs/{id}/listen`)
-- přidané launchery `Exa Research` a `Perplexity Deep Research`
+- původní `Perplexity Search` zůstává zachovaná a nově jsou přidané launchery `Exa Research` a `Tavily Research`
 - připravené rozhraní `ElevenLabs` pro budoucí per-user klíče
 - seed rozšířen z 20 na 50 témat

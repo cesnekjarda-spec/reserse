@@ -36,7 +36,7 @@ class Settings(BaseSettings):
     gemini_api_key: str | None = None
     gemini_model: str = "gemini-2.5-flash"
     exa_api_key: str | None = None
-    perplexity_api_key: str | None = None
+    tavily_api_key: str | None = None
     user_secret_encryption_key: str | None = None
     audio_tts_lang: str = "cs"
     audio_url_limit: int = 3

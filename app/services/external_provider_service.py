@@ -36,10 +36,10 @@ DEFAULT_EXTERNAL_PROVIDERS = [
         "sort_order": 3,
     },
     {
-        "code": "perplexity-deep-research",
-        "name": "Perplexity Deep Research",
-        "description": "Interní launcher pro deep-research prompt a rychlé otevření v Perplexity.",
-        "url_template": "/research/launch/perplexity-deep-research?q={query}",
+        "code": "tavily-research",
+        "name": "Tavily Research",
+        "description": "Interní launcher pro poctivý research prompt připravený pro budoucí Tavily API napojení.",
+        "url_template": "/research/launch/tavily-research?q={query}",
         "sort_order": 4,
     },
     {
@@ -71,7 +71,7 @@ def ensure_external_providers(db: Session) -> None:
         provider.is_active = True
         db.add(provider)
 
-    for stale_code in {"google-news", "bing-news", "microsoft-copilot"}:
+    for stale_code in {"google-news", "bing-news", "microsoft-copilot", "perplexity-deep-research"}:
         stale = db.scalar(select(ExternalProvider).where(ExternalProvider.code == stale_code))
         if stale:
             db.delete(stale)
@@ -170,6 +170,6 @@ def build_article_prompt(topic_name: str, article_title: str, article_summary: s
 
 def build_provider_url(provider: ExternalProvider, prompt: str) -> str:
     query = prompt
-    if provider.code in {"exa-research", "perplexity-deep-research"}:
+    if provider.code in {"exa-research", "tavily-research"}:
         query = build_launch_query(prompt, provider.code)
     return provider.url_template.replace("{query}", quote_plus(query))
