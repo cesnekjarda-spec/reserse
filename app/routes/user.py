@@ -16,6 +16,7 @@ from app.services.audio_service import (
     build_audio_research_text,
     build_listening_script_from_text,
     build_listening_script_preview,
+    synthesize_elevenlabs_mp3_bytes,
     synthesize_mp3_bytes,
 )
 from app.services.external_provider_service import (
@@ -27,6 +28,7 @@ from app.services.external_provider_service import (
     get_user_provider_preferences,
     save_user_provider_preferences,
 )
+from app.services.provider_api_service import run_provider_research
 from app.services.research_extension_service import (
     SUPPORTED_PROVIDER_CODES,
     build_external_research_prompt,
@@ -35,6 +37,7 @@ from app.services.research_extension_service import (
 from app.services.tts_connection_service import (
     DEFAULT_MODEL_ID,
     DEFAULT_PROVIDER_CODE,
+    decrypt_api_key,
     describe_connection,
     get_or_create_user_tts_connection,
     save_user_tts_connection,
@@ -172,6 +175,7 @@ def dashboard(request: Request):
             articles=articles,
             read_ids=read_ids,
             tts_connection=describe_connection(tts_connection),
+            can_generate_tts=bool(tts_connection.is_enabled and tts_connection.api_key_encrypted and tts_connection.voice_id),
         ),
     )
 
@@ -238,6 +242,7 @@ def brief_listen_script(request: Request, brief_id: str):
             listen_text=listen_text,
             related_articles=related_rows,
             tts_connection=describe_connection(tts_connection),
+            can_generate_tts=bool(tts_connection.is_enabled and tts_connection.api_key_encrypted and tts_connection.voice_id),
         ),
     )
 
@@ -283,24 +288,71 @@ def research_launcher(
     prompt = (q or "").strip()
     if not prompt:
         prompt = f"Zpracuj poctivou rešerši k tématu {topic or 'dané téma'} a uveď zdroje, nejistoty a co sledovat dál."
-    context = build_provider_launcher_context(provider_code, prompt)
-    listen_text = build_listening_script_from_text(
-        title=context["provider_name"],
-        body_text=context["helper_text"] + " " + prompt,
-        topic_name=topic or None,
-    )
+
+    fallback_context = build_provider_launcher_context(provider_code, prompt)
+    result = run_provider_research(provider_code, prompt)
+
+    with SessionLocal() as db:
+        tts_connection = get_or_create_user_tts_connection(db, current_user)
+    tts_description = describe_connection(tts_connection)
+    can_generate_tts = bool(tts_description.get("is_enabled") and tts_description.get("has_api_key") and tts_description.get("voice_id"))
 
     return request.app.state.templates.TemplateResponse(
         "research_launcher.html",
         template_context(
             request,
             provider_code=provider_code,
-            provider_name=context["provider_name"],
+            provider_name=result.provider_name,
             prompt=prompt,
-            external_url=context["external_url"],
-            helper_text=context["helper_text"],
-            listen_text=listen_text,
+            external_url=fallback_context["external_url"],
+            helper_text=result.helper_text,
+            listen_text=result.listen_text,
+            research_result=result,
+            tts_connection=tts_description,
+            can_generate_tts=can_generate_tts,
         ),
+    )
+
+
+@router.post("/tts/elevenlabs.mp3")
+def elevenlabs_text_to_speech(
+    request: Request,
+    title: str = Form(default="reserse"),
+    text: str = Form(default=""),
+):
+    current_user = require_user(request)
+    if not current_user:
+        return RedirectResponse(url="/login", status_code=303)
+
+    clean_text = (text or "").strip()
+    if not clean_text:
+        return PlainTextResponse("Chybí text pro ElevenLabs.", status_code=400)
+
+    with SessionLocal() as db:
+        connection = get_or_create_user_tts_connection(db, current_user)
+        secret = decrypt_api_key(connection.api_key_encrypted)
+        if not connection.is_enabled:
+            return PlainTextResponse("ElevenLabs je u tohoto účtu vypnuté.", status_code=400)
+        if not secret:
+            return PlainTextResponse("Chybí nebo nejde dešifrovat uložený ElevenLabs API klíč.", status_code=400)
+        if not connection.voice_id:
+            return PlainTextResponse("Chybí ElevenLabs Voice ID.", status_code=400)
+        try:
+            mp3_bytes = synthesize_elevenlabs_mp3_bytes(
+                clean_text,
+                api_key=secret,
+                voice_id=connection.voice_id,
+                model_id=connection.model_id or DEFAULT_MODEL_ID,
+            )
+        except Exception as exc:
+            return PlainTextResponse(f"ElevenLabs API chyba: {exc}", status_code=502)
+
+    safe_title = "".join(ch for ch in (title or "reserse") if ch.isalnum() or ch in ("-", "_", " ")).strip().replace(" ", "-") or "reserse"
+    filename = f"{safe_title}.mp3"
+    return StreamingResponse(
+        BytesIO(mp3_bytes),
+        media_type="audio/mpeg",
+        headers={"Content-Disposition": f'inline; filename="{filename}"'},
     )
 
 

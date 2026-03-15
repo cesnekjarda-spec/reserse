@@ -3,6 +3,7 @@ from __future__ import annotations
 from io import BytesIO
 from typing import Iterable
 
+import httpx
 from google import genai
 from google.genai.types import GenerateContentConfig
 from gtts import gTTS
@@ -110,3 +111,33 @@ def synthesize_mp3_bytes(text: str) -> bytes:
     tts = gTTS(text=text, lang=settings.audio_tts_lang)
     tts.write_to_fp(fp)
     return fp.getvalue()
+
+
+def synthesize_elevenlabs_mp3_bytes(
+    text: str,
+    *,
+    api_key: str,
+    voice_id: str,
+    model_id: str | None = None,
+) -> bytes:
+    clean_text = normalize_whitespace(text)
+    if not clean_text:
+        raise ValueError("Text pro ElevenLabs je prázdný")
+    if not voice_id:
+        raise ValueError("Chybí ElevenLabs voice_id")
+    url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+    params = {"output_format": "mp3_44100_128"}
+    payload = {
+        "text": shorten_text(clean_text, 4500),
+        "model_id": model_id or "eleven_multilingual_v2",
+        "language_code": "cs",
+    }
+    headers = {
+        "xi-api-key": api_key,
+        "Content-Type": "application/json",
+        "Accept": "audio/mpeg",
+    }
+    with httpx.Client(timeout=settings.provider_request_timeout_seconds) as client:
+        response = client.post(url, params=params, json=payload, headers=headers)
+        response.raise_for_status()
+        return response.content

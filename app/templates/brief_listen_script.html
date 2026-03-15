@@ -11,6 +11,7 @@
     <a class="btn btn-secondary" href="/dashboard">Zpět na dashboard</a>
     <a class="btn btn-ghost" href="/briefs/{{ brief.id }}/audio.mp3" target="_blank" rel="noopener">MP3 rešerše</a>
     <a class="btn btn-ghost" href="/briefs/{{ brief.id }}/listen.txt">TXT export</a>
+    {% if can_generate_tts %}<form method="post" action="/tts/elevenlabs.mp3" target="_blank" style="display:inline"><input type="hidden" name="title" value="brief-{{ brief.id }}"><textarea name="text" hidden>{{ listen_text }}</textarea><button class="btn btn-ghost" type="submit">ElevenLabs MP3</button></form>{% endif %}
   </div>
 </section>
 
@@ -25,7 +26,7 @@
 </section>
 
 <section class="card">
-  <div class="section-head"><div><div class="eyebrow">Budoucí TTS</div><h2>Rozhraní ElevenLabs</h2></div></div>
+  <div class="section-head"><div><div class="eyebrow">Přímé TTS</div><h2>Rozhraní ElevenLabs</h2></div></div>
   <p>{{ tts_connection.status }}</p>
   <div class="chip-row">
     <span class="keyword-chip">provider: {{ tts_connection.display_name }}</span>
@@ -33,7 +34,7 @@
     {% if tts_connection.voice_id %}<span class="keyword-chip">voice: {{ tts_connection.voice_id }}</span>{% endif %}
     {% if tts_connection.api_key_last4 %}<span class="keyword-chip">key: …{{ tts_connection.api_key_last4 }}</span>{% endif %}
   </div>
-  <p class="muted">Automatické volání ElevenLabs zatím záměrně nespouští žádnou novou rizikovou větev. Rozhraní je připravené a script lze už teď předat do externího TTS bezpečně přes export nebo copy.</p>
+  {% if can_generate_tts %}<p class="muted">Tento poslechový script už můžeš přímo převést do MP3 přes uložený ElevenLabs účet uživatele.</p>{% else %}<p class="muted">Pro přímé ElevenLabs audio je potřeba uložený API key, Voice ID a zapnuté rozhraní v dashboardu.</p>{% endif %}
 </section>
 
 {% if related_articles %}

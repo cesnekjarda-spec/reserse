@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import base64
+import hashlib
 
 from cryptography.fernet import Fernet, InvalidToken
 from sqlalchemy import select
@@ -20,11 +22,21 @@ class TtsSecretUnavailableError(RuntimeError):
     pass
 
 
+def _build_fernet_key(secret: str) -> bytes:
+    clean = secret.strip().encode("utf-8")
+    try:
+        Fernet(clean)
+        return clean
+    except Exception:
+        digest = hashlib.sha256(clean).digest()
+        return base64.urlsafe_b64encode(digest)
+
+
 def _get_fernet() -> Fernet:
     secret = settings.user_secret_encryption_key
     if not secret:
         raise TtsSecretUnavailableError("USER_SECRET_ENCRYPTION_KEY is not configured")
-    return Fernet(secret.encode("utf-8"))
+    return Fernet(_build_fernet_key(secret))
 
 
 def mask_api_key(value: str | None) -> str | None:
@@ -93,11 +105,11 @@ def describe_connection(connection: UserTtsConnection | None) -> dict:
         }
 
     has_api_key = bool(connection.api_key_encrypted)
-    status = "Rozhraní připravené bez API klíče."
+    status = "Rozhraní je bez API klíče."
     if has_api_key and connection.is_enabled:
-        status = "Rozhraní má uložený klíč a je připravené pro budoucí automatické TTS napojení."
+        status = "ElevenLabs je aktivní a může generovat audio přes uložený účet uživatele."
     elif has_api_key:
-        status = "Klíč je uložený, ale napojení je vypnuté."
+        status = "Klíč je uložený, ale přímé TTS volání je vypnuté."
 
     return {
         "provider_code": connection.provider_code,

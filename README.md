@@ -37,5 +37,12 @@ Když API klíč nenastavíš, vygeneruje se audio z interního briefingu jako f
 - původní funkční brief zůstal zachovaný
 - přidaný poslechový model briefu (`/briefs/{id}/listen`)
 - původní `Perplexity Search` zůstává zachovaná a nově jsou přidané launchery `Exa Research` a `Tavily Research`
-- připravené rozhraní `ElevenLabs` pro budoucí per-user klíče
+- funkční rozhraní `ElevenLabs` pro per-user klíče a přímé MP3 generování
 - seed rozšířen z 20 na 50 témat
+
+
+## 2026-03-15 doplnění živého napojení
+
+- Exa a Tavily teď umí skutečné serverové API volání místo pouhého launcheru.
+- ElevenLabs umí přímé MP3 generování z poslechového scriptu i z externí rešerše přes uložený uživatelský účet.
+- USER_SECRET_ENCRYPTION_KEY už může být libovolný dlouhý tajný řetězec; aplikace si z něj sama odvodí platný Fernet klíč.

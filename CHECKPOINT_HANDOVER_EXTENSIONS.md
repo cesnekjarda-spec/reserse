@@ -23,9 +23,9 @@
 4. **Tavily Research launcher**
    - nový provider `tavily-research`
    - otevírá interní launcher `/research/launch/tavily-research?q=...`
-   - připravuje prompt pro budoucí Tavily API napojení bez zásahu do stávající logiky
+   - volá živou Tavily rešerši přes API a zároveň připraví i poslechový text
 
-5. **ElevenLabs rozhraní pro budoucí per-user napojení**
+5. **ElevenLabs per-user napojení pro přímé MP3 generování**
    - nový model `user_tts_connections`
    - dashboard má samostatné UI pro `display_name`, `voice_id`, `model_id`, `note`, `api_key`
    - automatické TTS přes ElevenLabs zatím úmyslně nespouští žádnou novou aktivní větev
@@ -43,3 +43,10 @@
 
 ## Důležitá poznámka k ElevenLabs klíči
 Pokud není nastaven `USER_SECRET_ENCRYPTION_KEY`, rozhraní uloží metadata, ale neuloží samotný klíč. To je záměrné bezpečnostní chování.
+
+
+## 2026-03-15 doplnění živého napojení
+
+- Exa a Tavily teď umí skutečné serverové API volání místo pouhého launcheru.
+- ElevenLabs umí přímé MP3 generování z poslechového scriptu i z externí rešerše přes uložený uživatelský účet.
+- USER_SECRET_ENCRYPTION_KEY už může být libovolný dlouhý tajný řetězec; aplikace si z něj sama odvodí platný Fernet klíč.

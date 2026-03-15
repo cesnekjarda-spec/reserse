@@ -51,13 +51,13 @@ def build_provider_launcher_context(provider_code: str, prompt: str) -> dict:
     helper_text = ""
     if provider_code == "exa-research":
         helper_text = (
-            "Tato větev je přidaná jako bezpečné rozhraní pro budoucí API napojení. "
-            "Teď připravuje poctivý prompt a export textu bez zásahu do stávající funkční logiky."
+            "Tato větev umí po doplnění EXA_API_KEY zavolat živou webovou rešerši přes Exa API, "
+            "zobrazit výsledek a připravit zvlášť i text upravený pro poslech."
         )
     elif provider_code == "tavily-research":
         helper_text = (
-            "Tato větev připravuje poctivý research prompt pro budoucí Tavily API napojení. "
-            "Teď zůstává jako bezpečné rozšíření bez zásahu do stávající funkční logiky."
+            "Tato větev umí po doplnění TAVILY_API_KEY zavolat živou webovou rešerši přes Tavily API, "
+            "zobrazit výsledek a připravit zvlášť i text upravený pro poslech."
         )
     return {
         "provider_name": provider_name,

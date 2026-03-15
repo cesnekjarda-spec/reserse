@@ -31,14 +31,14 @@ DEFAULT_EXTERNAL_PROVIDERS = [
     {
         "code": "exa-research",
         "name": "Exa Research",
-        "description": "Interní launcher pro poctivý research prompt připravený pro budoucí API napojení.",
+        "description": "Živá webová rešerše přes Exa API s citacemi a poslechovým výstupem.",
         "url_template": "/research/launch/exa-research?q={query}",
         "sort_order": 3,
     },
     {
         "code": "tavily-research",
         "name": "Tavily Research",
-        "description": "Interní launcher pro poctivý research prompt připravený pro budoucí Tavily API napojení.",
+        "description": "Živá webová rešerše přes Tavily API s odpovědí, zdroji a poslechovým výstupem.",
         "url_template": "/research/launch/tavily-research?q={query}",
         "sort_order": 4,
     },
