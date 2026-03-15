@@ -9,6 +9,7 @@ from app.models.brief import Brief
 from app.models.provider import ExternalProvider, UserProviderPreference
 from app.models.topic import Topic
 from app.models.user import User
+from app.services.research_extension_service import build_launch_query
 from app.utils.text import shorten_text
 
 
@@ -28,18 +29,32 @@ DEFAULT_EXTERNAL_PROVIDERS = [
         "sort_order": 2,
     },
     {
+        "code": "exa-research",
+        "name": "Exa Research",
+        "description": "Interní launcher pro poctivý research prompt připravený pro budoucí API napojení.",
+        "url_template": "/research/launch/exa-research?q={query}",
+        "sort_order": 3,
+    },
+    {
+        "code": "perplexity-deep-research",
+        "name": "Perplexity Deep Research",
+        "description": "Interní launcher pro deep-research prompt a rychlé otevření v Perplexity.",
+        "url_template": "/research/launch/perplexity-deep-research?q={query}",
+        "sort_order": 4,
+    },
+    {
         "code": "kagi-assistant",
         "name": "Kagi Assistant",
         "description": "AI rešeršní dotaz v Kagi Assistantu s webovým kontextem.",
         "url_template": "https://kagi.com/assistant?internet=true&q={query}",
-        "sort_order": 3,
+        "sort_order": 5,
     },
     {
         "code": "kagi-search",
         "name": "Kagi Search",
         "description": "Klasické vyhledávání v Kagi pro rychlé ověření a dohledání zdrojů.",
         "url_template": "https://kagi.com/search?q={query}",
-        "sort_order": 4,
+        "sort_order": 6,
     },
 ]
 
@@ -126,7 +141,8 @@ def build_topic_prompt(topic: Topic | str, mode: str = "topic") -> str:
             f"Vytvoř operativní rešerši k tématu {topic_name}. "
             f"Zaměř se na 5 nejnovějších a nejdůležitějších zpráv, "
             f"u každé napiš co se stalo, proč je to důležité a co sledovat dál. "
-            f"Preferuj důvěryhodné zdroje a posledních 7 dní."
+            f"Preferuj důvěryhodné zdroje a posledních 7 dní. "
+            f"Pokud najdeš rozpor mezi zdroji, výslovně ho označ."
         )
 
     return f"Shrň hlavní vývoj v tématu {topic_name} za posledních 7 dní."
@@ -139,7 +155,8 @@ def build_brief_prompt(brief: Brief) -> str:
         f"Navaz na briefing k tématu {topic_name}. "
         f"Pracuj s okruhy {points}. "
         f"Rozšiř rešerši o kontext, dopady a protichůdné interpretace, "
-        f"ale drž se posledních 7 dní a důvěryhodných zdrojů."
+        f"ale drž se posledních 7 dní a důvěryhodných zdrojů. "
+        f"Odděl jistá fakta od nejistot."
     )
 
 
@@ -152,4 +169,7 @@ def build_article_prompt(topic_name: str, article_title: str, article_summary: s
 
 
 def build_provider_url(provider: ExternalProvider, prompt: str) -> str:
-    return provider.url_template.replace("{query}", quote_plus(prompt))
+    query = prompt
+    if provider.code in {"exa-research", "perplexity-deep-research"}:
+        query = build_launch_query(prompt, provider.code)
+    return provider.url_template.replace("{query}", quote_plus(query))

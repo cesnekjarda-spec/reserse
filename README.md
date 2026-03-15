@@ -31,3 +31,11 @@ Použij novou / čistou databázi. Tento checkpoint předpokládá čisté schem
 Aplikace umí na vyžádání vytvořit MP3 audio rešerši z publikovaného briefingu.
 Pokud nastavíš `GEMINI_API_KEY`, použije se Gemini URL Context nad několika veřejnými URL článků spojených s briefem a výsledek se převede do MP3 bez trvalého ukládání na server.
 Když API klíč nenastavíš, vygeneruje se audio z interního briefingu jako fallback.
+
+
+## Rozšíření v tomto checkpointu
+- původní funkční brief zůstal zachovaný
+- přidaný poslechový model briefu (`/briefs/{id}/listen`)
+- přidané launchery `Exa Research` a `Perplexity Deep Research`
+- připravené rozhraní `ElevenLabs` pro budoucí per-user klíče
+- seed rozšířen z 20 na 50 témat

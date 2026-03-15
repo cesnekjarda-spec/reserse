@@ -22,3 +22,4 @@ class User(Base):
     sessions = relationship("UserSession", back_populates="user", cascade="all, delete-orphan")
     subscriptions = relationship("UserTopicSubscription", back_populates="user", cascade="all, delete-orphan")
     reads = relationship("UserArticleRead", back_populates="user", cascade="all, delete-orphan")
+    tts_connections = relationship("UserTtsConnection", cascade="all, delete-orphan")

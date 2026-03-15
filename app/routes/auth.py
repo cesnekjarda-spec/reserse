@@ -143,6 +143,7 @@ def register_submit(
 
 @router.get("/sso/consume")
 def sso_consume(request: Request, token: str):
+    # ACTIVE H2C-R PATH: preferred production integration with VIP.
     claims = _verify_vip_sso_token(token)
     email = str(claims.get("email") or "").strip().lower()
     username = str(claims.get("username") or "").strip()

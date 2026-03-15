@@ -42,6 +42,7 @@ def init_db() -> None:
     from app.models.subscription import UserTopicSubscription, UserArticleRead
     from app.models.session import UserSession
     from app.models.sync import SyncRun, SyncRunItem
+    from app.models.user_tts import UserTtsConnection
 
     if settings.database_url.startswith("postgresql"):
         with engine.begin() as conn:
@@ -57,6 +58,7 @@ def init_db() -> None:
         UserProviderPreference.__table__,
         UserTopicSubscription.__table__,
         UserArticleRead.__table__,
+        UserTtsConnection.__table__,
         UserSession.__table__,
         SyncRun.__table__,
         SyncRunItem.__table__,

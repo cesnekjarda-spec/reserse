@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     vip_sso_enabled: bool = True
     vip_sso_shared_secret: str | None = None
     vip_sso_issuer: str = "vip-klub"
+    # LEGACY H2B fallback only. Preferred active flow is H2C-R via /sso/consume.
     vip_internal_shared_secret: str | None = None
     vip_allow_jit_provisioning: bool = True
 
@@ -34,8 +35,12 @@ class Settings(BaseSettings):
 
     gemini_api_key: str | None = None
     gemini_model: str = "gemini-2.5-flash"
+    exa_api_key: str | None = None
+    perplexity_api_key: str | None = None
+    user_secret_encryption_key: str | None = None
     audio_tts_lang: str = "cs"
     audio_url_limit: int = 3
+    provider_request_timeout_seconds: int = 30
 
     model_config = SettingsConfigDict(
         env_file=".env",

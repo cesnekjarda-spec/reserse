@@ -13,14 +13,39 @@ from app.models.brief import Brief
 from app.utils.text import normalize_whitespace, shorten_text
 
 
+def _article_title_block(related_articles: list[Article], limit: int = 4) -> str:
+    titles = [article.title for article in related_articles[:limit] if article.title]
+    return " ".join(f"Důležitý zdroj: {shorten_text(title, 160)}." for title in titles)
+
+
+def build_listening_script_preview(brief: Brief, related_articles: list[Article]) -> str:
+    intro = f"Poslechový přehled k tématu {brief.topic.name if brief.topic else 'téma'}."
+    return normalize_whitespace(
+        f"{intro} {brief.title}. Hlavní shrnutí: {brief.summary}. "
+        f"Teď stručně k tomu, co se skutečně děje: {brief.what_happened}. "
+        f"Pro posluchače je důležité hlavně toto: {brief.why_it_matters}. "
+        f"A dál se vyplatí sledovat: {brief.watchlist}. "
+        f"{_article_title_block(related_articles, limit=3)}"
+    )
+
+
 def _build_fallback_script(brief: Brief, related_articles: list[Article]) -> str:
-    titles = [article.title for article in related_articles[:4] if article.title]
-    title_block = " ".join(f"Důležitý zdroj: {shorten_text(title, 160)}." for title in titles)
     return normalize_whitespace(
         f"Audio briefing k tématu {brief.topic.name if brief.topic else 'téma'}. "
-        f"{brief.title}. Shrnutí: {brief.summary}. Co se děje: {brief.what_happened}. "
-        f"Proč je to důležité: {brief.why_it_matters}. Co dál sledovat: {brief.watchlist}. "
-        f"{title_block}"
+        f"{brief.title}. Nejdřív krátké shrnutí. {brief.summary}. "
+        f"Co se právě děje. {brief.what_happened}. "
+        f"Proč je to důležité. {brief.why_it_matters}. "
+        f"Co dál sledovat. {brief.watchlist}. "
+        f"{_article_title_block(related_articles)}"
+    )
+
+
+def build_listening_script_from_text(title: str, body_text: str, topic_name: str | None = None) -> str:
+    topic_intro = f" k tématu {topic_name}" if topic_name else ""
+    return normalize_whitespace(
+        f"Poslechový přepis{topic_intro}. {title}. "
+        f"{body_text} "
+        f"Konec přehledu."
     )
 
 

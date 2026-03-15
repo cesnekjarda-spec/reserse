@@ -1160,3 +1160,50 @@ SEED_TOPICS = [
     ]
   }
 ]
+
+
+
+def _extra_google_source(query: str) -> dict:
+    from urllib.parse import quote_plus
+    encoded = quote_plus(query)
+    return {
+        "name": f"Google News – {query}",
+        "website_url": f"https://news.google.com/search?q={encoded}&hl=cs&gl=CZ&ceid=CZ:cs",
+        "rss_url": f"https://news.google.com/rss/search?q={encoded}&hl=cs&gl=CZ&ceid=CZ:cs",
+    }
+
+
+ADDITIONAL_SEED_TOPICS = [
+    {"name": "Vaření a gastronomie", "description": "Recepty, gastronomické trendy, suroviny a food business.", "price_czk": 1, "sort_order": 21, "sources": [_extra_google_source(q) for q in ["gastronomie", "recepty", "food trend"]]},
+    {"name": "Cestování a turistika", "description": "Destinace, hotely, letectví a cestovatelské trendy.", "price_czk": 1, "sort_order": 22, "sources": [_extra_google_source(q) for q in ["cestování", "turistika", "travel industry"]]},
+    {"name": "Sport a fitness", "description": "Výkonnost, trénink, soutěže a fitness byznys.", "price_czk": 1, "sort_order": 23, "sources": [_extra_google_source(q) for q in ["fitness", "sport business", "trénink"]]},
+    {"name": "Hobby a DIY", "description": "Domácí tvorba, dílny, maker kultura a volný čas.", "price_czk": 1, "sort_order": 24, "sources": [_extra_google_source(q) for q in ["DIY", "maker", "hobby"]]},
+    {"name": "Knihy a literatura", "description": "Knižní novinky, nakladatelství a literární dění.", "price_czk": 1, "sort_order": 25, "sources": [_extra_google_source(q) for q in ["literatura", "knihy", "publishing industry"]]},
+    {"name": "Film a seriály", "description": "Streamovací služby, premiéry a audiovizuální průmysl.", "price_czk": 1, "sort_order": 26, "sources": [_extra_google_source(q) for q in ["film industry", "streaming", "seriály"]]},
+    {"name": "Hudba a podcasty", "description": "Hudební průmysl, audio tvorba a podcastový trh.", "price_czk": 1, "sort_order": 27, "sources": [_extra_google_source(q) for q in ["music industry", "podcast", "streaming music"]]},
+    {"name": "Herní průmysl a esport", "description": "Hry, studia, distribuce a esport.", "price_czk": 1, "sort_order": 28, "sources": [_extra_google_source(q) for q in ["gaming industry", "esports", "video games"]]},
+    {"name": "Školství a vzdělávání", "description": "Školy, edtech, kurikulum a vzdělávací trendy.", "price_czk": 1, "sort_order": 29, "sources": [_extra_google_source(q) for q in ["školství", "education policy", "edtech"]]},
+    {"name": "Rodina a výchova", "description": "Rodičovství, výchova a rodinná témata.", "price_czk": 1, "sort_order": 30, "sources": [_extra_google_source(q) for q in ["rodičovství", "výchova", "family policy"]]},
+    {"name": "Psychologie a osobní rozvoj", "description": "Psychologie, návyky, wellbeing a osobní růst.", "price_czk": 1, "sort_order": 31, "sources": [_extra_google_source(q) for q in ["psychologie", "mental wellbeing", "personal development"]]},
+    {"name": "Krása a péče", "description": "Beauty, wellness, kosmetika a péče o tělo.", "price_czk": 1, "sort_order": 32, "sources": [_extra_google_source(q) for q in ["beauty industry", "kosmetika", "wellness"]]},
+    {"name": "Móda a design", "description": "Fashion, produktový design a trendy.", "price_czk": 1, "sort_order": 33, "sources": [_extra_google_source(q) for q in ["fashion industry", "design trends", "luxury retail"]]},
+    {"name": "Zahrada a chovatelství", "description": "Zahradničení, péče o zvířata a hobby chov.", "price_czk": 1, "sort_order": 34, "sources": [_extra_google_source(q) for q in ["gardening", "pets industry", "chovatelství"]]},
+    {"name": "Architektura a interiér", "description": "Architektura, interiéry, vybavení a materiály.", "price_czk": 1, "sort_order": 35, "sources": [_extra_google_source(q) for q in ["architecture", "interior design", "building materials"]]},
+    {"name": "Fotografie a video", "description": "Tvorba obrazu, technika a kreativní workflow.", "price_czk": 1, "sort_order": 36, "sources": [_extra_google_source(q) for q in ["photography", "video production", "camera industry"]]},
+    {"name": "Umění a kultura", "description": "Výstavy, festivaly, kulturní provoz a financování kultury.", "price_czk": 1, "sort_order": 37, "sources": [_extra_google_source(q) for q in ["culture sector", "umění", "festival"]]},
+    {"name": "Historie a archeologie", "description": "Historické objevy, archeologie a popularizace historie.", "price_czk": 1, "sort_order": 38, "sources": [_extra_google_source(q) for q in ["archeologie", "history discovery", "historical research"]]},
+    {"name": "Domácnost a úspory", "description": "Úspory v domácnosti, energie a chytré vybavení.", "price_czk": 1, "sort_order": 39, "sources": [_extra_google_source(q) for q in ["domácnost", "household savings", "smart home"]]},
+    {"name": "Pojištění a osobní finance", "description": "Pojištění, spoření a finance domácností.", "price_czk": 1, "sort_order": 40, "sources": [_extra_google_source(q) for q in ["pojištění", "personal finance", "household finance"]]},
+    {"name": "Daně a účetnictví", "description": "Daňové změny, reporting a účetní agenda.", "price_czk": 1, "sort_order": 41, "sources": [_extra_google_source(q) for q in ["daně", "účetnictví", "tax policy"]]},
+    {"name": "Logistika a supply chain", "description": "Doprava, sklady, logistika a dodavatelské řetězce.", "price_czk": 1, "sort_order": 42, "sources": [_extra_google_source(q) for q in ["logistics", "supply chain", "warehousing"]]},
+    {"name": "Průmysl a výroba", "description": "Výroba, automatizace linek a průmyslové investice.", "price_czk": 1, "sort_order": 43, "sources": [_extra_google_source(q) for q in ["manufacturing", "industrial automation", "factory investment"]]},
+    {"name": "Zemědělství a potravinářství", "description": "Agri, potravinová výroba a bezpečnost dodávek.", "price_czk": 1, "sort_order": 44, "sources": [_extra_google_source(q) for q in ["agriculture", "food industry", "potravinářství"]]},
+    {"name": "Veřejná správa a samospráva", "description": "Města, kraje, digitalizace úřadů a správa státu.", "price_czk": 1, "sort_order": 45, "sources": [_extra_google_source(q) for q in ["veřejná správa", "municipal government", "digital government"]]},
+    {"name": "Neziskový sektor a filantropie", "description": "Neziskové organizace, granty a dopadové projekty.", "price_czk": 1, "sort_order": 46, "sources": [_extra_google_source(q) for q in ["nonprofit sector", "filantropie", "grant funding"]]},
+    {"name": "Telekomunikace a konektivita", "description": "Sítě, operátoři, 5G a konektivita.", "price_czk": 1, "sort_order": 47, "sources": [_extra_google_source(q) for q in ["telecommunications", "5G", "network infrastructure"]]},
+    {"name": "Kosmonautika a space tech", "description": "Vesmírné mise, satelity a space průmysl.", "price_czk": 1, "sort_order": 48, "sources": [_extra_google_source(q) for q in ["space industry", "satellite", "space tech"]]},
+    {"name": "Obrana a bezpečnost", "description": "Obranný průmysl, bezpečnostní politika a technologie.", "price_czk": 1, "sort_order": 49, "sources": [_extra_google_source(q) for q in ["defense industry", "security policy", "military technology"]]},
+    {"name": "Životní styl a well-being", "description": "Lifestyle, zdravé návyky a každodenní wellbeing.", "price_czk": 1, "sort_order": 50, "sources": [_extra_google_source(q) for q in ["lifestyle", "well-being", "healthy habits"]]},
+]
+
+SEED_TOPICS.extend(ADDITIONAL_SEED_TOPICS)

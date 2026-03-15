@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Reserse · {{ provider_name }}{% endblock %}
+{% block content %}
+<section class="panel-header card-soft-accent">
+  <div>
+    <div class="eyebrow">Externí rozšíření</div>
+    <h1>{{ provider_name }}</h1>
+    <p>{{ helper_text }}</p>
+  </div>
+  <div class="hero-actions compact-actions">
+    <a class="btn btn-secondary" href="/dashboard">Zpět na dashboard</a>
+    {% if external_url %}<a class="btn btn-ghost" href="{{ external_url }}" target="_blank" rel="noopener">Otevřít externě</a>{% endif %}
+  </div>
+</section>
+
+<section class="card">
+  <div class="section-head"><div><div class="eyebrow">Prompt</div><h2>Připravený research dotaz</h2></div></div>
+  <div class="preline">{{ prompt }}</div>
+  <div class="hero-actions compact-actions">
+    <button class="btn btn-secondary js-copy-text" type="button" data-copied-label="Prompt zkopírován" data-copy-text="{{ prompt|e }}">Kopírovat prompt</button>
+    <button class="btn btn-ghost js-read-aloud" type="button" data-default-label="Přečíst prompt nahlas" data-speech-text="{{ listen_text|replace('\n', ' ')|e }}">Přečíst prompt nahlas</button>
+  </div>
+</section>
+
+<section class="card">
+  <div class="section-head"><div><div class="eyebrow">Poznámka</div><h2>Bezpečná přidaná větev</h2></div></div>
+  <p>Tato část je přidaná jako rozšíření vedle stávající funkční logiky. Nezasahuje do tvorby současného briefu, jen připravuje samostatný research tok pro {{ provider_name }}.</p>
+</section>
+{% endblock %}

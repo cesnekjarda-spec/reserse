@@ -5,9 +5,18 @@
   <div>
     <div class="eyebrow">Klientská část</div>
     <h1>Briefingy, monitoring a externí launchery</h1>
-    <p>Vrstva 1 zobrazuje publikované briefingy. Vrstva 2 otevírá v novém okně navazující rešerši u vybraných providerů.</p>
+    <p>Vrstva 1 zobrazuje publikované briefingy. Vrstva 2 otevírá v novém okně navazující rešerši u vybraných providerů. Nové větve jsou přidané vedle stávající logiky.</p>
   </div>
 </section>
+
+{% if request.query_params.get('tts_saved') %}
+<section class="card">
+  <p>Rozhraní ElevenLabs bylo uloženo.</p>
+  {% if request.query_params.get('tts_warning') %}
+    <p class="muted">API klíč se neuložil, protože v prostředí zatím chybí USER_SECRET_ENCRYPTION_KEY. Ostatní metadata rozhraní zůstala zachována.</p>
+  {% endif %}
+</section>
+{% endif %}
 
 <section class="card">
   <div class="section-head"><div><div class="eyebrow">Nastavení</div><h2>Moje témata</h2></div></div>
@@ -26,6 +35,23 @@
       <label class="checkbox-item"><input type="checkbox" name="provider_ids" value="{{ pref.provider_id }}" {% if pref.is_enabled %}checked{% endif %}> {{ pref.provider.name if pref.provider else pref.provider_id }}</label>
     {% endfor %}
     <button class="btn btn-secondary" type="submit">Uložit providery</button>
+  </form>
+</section>
+
+<section class="card">
+  <div class="section-head"><div><div class="eyebrow">Budoucí TTS</div><h2>Rozhraní ElevenLabs</h2></div></div>
+  <p class="muted">Zatím je přidané jen rozhraní pro budoucí automatické TTS napojení přes vlastní účet uživatele. Stávající audio a brief logika zůstává beze změny.</p>
+  <form method="post" action="/dashboard/tts" class="stack-form admin-create-grid">
+    <label>Název poskytovatele<input type="text" name="display_name" value="{{ tts_connection.display_name }}"></label>
+    <label>Voice ID<input type="text" name="voice_id" value="{{ tts_connection.voice_id }}" placeholder="např. Rachel nebo vlastní voice id"></label>
+    <label>Model ID<input type="text" name="model_id" value="{{ tts_connection.model_id }}"></label>
+    <label class="full">API key (volitelné, pro budoucí použití)<input type="password" name="api_key" value=""></label>
+    <label class="full">Poznámka<textarea name="note" rows="2">{{ tts_connection.note }}</textarea></label>
+    <label class="switch-inline"><input type="checkbox" name="is_enabled" {% if tts_connection.is_enabled %}checked{% endif %}> Rozhraní připravené k použití</label>
+    <div class="hero-actions compact-actions">
+      <button class="btn btn-secondary" type="submit">Uložit rozhraní</button>
+      {% if tts_connection.api_key_last4 %}<span class="mini-meta">uložený klíč končí na …{{ tts_connection.api_key_last4 }}</span>{% else %}<span class="mini-meta">zatím bez uloženého klíče</span>{% endif %}
+    </div>
   </form>
 </section>
 
@@ -73,14 +99,28 @@
           <div class="chip-row">{% for point in brief.key_points %}<span class="keyword-chip">{{ point }}</span>{% endfor %}</div>
         </div>
       </div>
+      <details class="external-details">
+        <summary>Poslechový preview text</summary>
+        <div class="preline">{{ brief_listen_preview.get(brief.id, '') }}</div>
+      </details>
       <div class="hero-actions compact-actions">
         <button
           class="btn btn-secondary js-read-aloud"
           type="button"
+          data-default-label="Přečíst briefing nahlas"
           data-speech-text="{{ ('Téma ' ~ (brief.topic.name if brief.topic else '') ~ '. ' ~ brief.title ~ '. Shrnutí. ' ~ brief.summary ~ '. Co se děje. ' ~ brief.what_happened ~ '. Proč je to důležité. ' ~ brief.why_it_matters ~ '. Co dál sledovat. ' ~ brief.watchlist)|replace('\n', ' ')|e }}"
         >
           Přečíst briefing nahlas
         </button>
+        <button
+          class="btn btn-ghost js-read-aloud"
+          type="button"
+          data-default-label="Přečíst poslechový script"
+          data-speech-text="{{ brief_listen_preview.get(brief.id, '')|replace('\n', ' ')|e }}"
+        >
+          Přečíst poslechový script
+        </button>
+        <a class="btn btn-ghost" href="/briefs/{{ brief.id }}/listen">Poslechový model</a>
         <a class="btn btn-ghost" href="/briefs/{{ brief.id }}/audio.mp3" target="_blank" rel="noopener">Audio rešerše MP3</a>
       </div>
       <div class="provider-link-row">
