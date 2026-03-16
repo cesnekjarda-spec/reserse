@@ -159,26 +159,42 @@ def _run_tavily(prompt: str) -> ProviderResearchResult:
         "Authorization": f"Bearer {settings.tavily_api_key}",
         "Content-Type": "application/json",
     }
-    payload = {
-        "query": prompt,
-        "topic": "news",
-        "search_depth": "advanced",
+
+    # Tavily Search funguje nejspolehlivěji s kratším, vyhledávacím dotazem.
+    # Příliš direktivní nebo dlouhé promptové zadání může vracet 400.
+    search_query = shorten_text(normalize_whitespace(prompt), 900)
+    payload_primary = {
+        "query": search_query,
+        "auto_parameters": True,
         "max_results": 6,
-        "time_range": "month",
         "include_answer": "advanced",
         "include_favicon": True,
         "include_raw_content": False,
         "include_usage": True,
     }
+    payload_fallback = {
+        "query": search_query,
+        "max_results": 5,
+        "include_answer": True,
+        "include_raw_content": False,
+        "include_usage": True,
+    }
+
+    last_error = None
+    data = None
     try:
         with httpx.Client(timeout=settings.provider_request_timeout_seconds) as client:
-            response = client.post(url, headers=headers, json=payload)
+            response = client.post(url, headers=headers, json=payload_primary)
+            if response.status_code == 400:
+                last_error = f"HTTP 400: {response.text}"
+                response = client.post(url, headers=headers, json=payload_fallback)
             response.raise_for_status()
             data = response.json()
     except Exception as exc:
-        return _build_manual_result("tavily-research", prompt, f"Tavily API chyba: {exc}")
+        detail = last_error or str(exc)
+        return _build_manual_result("tavily-research", prompt, f"Tavily API chyba: {detail}")
 
-    answer = normalize_whitespace(str(data.get("answer") or ""))
+    answer = normalize_whitespace(str((data or {}).get("answer") or ""))
     citations = _citations_from_tavily(data.get("results"))
     if not answer and citations:
         answer = " ".join(
