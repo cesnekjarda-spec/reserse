@@ -7,6 +7,7 @@ from fastapi.templating import Jinja2Templates
 from app.config import settings
 from app.db import SessionLocal, init_db
 from app.routes import admin, auth, internal, public, user
+from app.utils.rendering import render_rich_text
 from app.services.auth_service import get_user_from_session_token
 from app.services.bootstrap_service import ensure_system_accounts
 from app.services.sync_service import run_sync
@@ -17,6 +18,7 @@ BASE_DIR = Path(__file__).resolve().parent
 app = FastAPI(title=settings.app_name)
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 app.state.templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+app.state.templates.env.filters["render_rich_text"] = render_rich_text
 
 
 @app.middleware("http")

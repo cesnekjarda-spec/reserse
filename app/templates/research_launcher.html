@@ -16,7 +16,7 @@
 <section class="card">
   <div class="section-head"><div><div class="eyebrow">Výsledek</div><h2>{{ research_result.status_label }}</h2></div></div>
   {% if research_result.error_message %}<p class="muted">{{ research_result.error_message }}</p>{% endif %}
-  <div class="preline">{{ research_result.result_text or 'Výsledek zatím není k dispozici.' }}</div>
+  <div class="preline">{{ (research_result.result_text or 'Výsledek zatím není k dispozici.')|render_rich_text }}</div>
   <div class="hero-actions compact-actions">
     <button class="btn btn-secondary js-read-aloud" type="button" data-default-label="Přečíst rešerši nahlas" data-speech-text="{{ (research_result.listen_text or '')|replace('\n', ' ')|e }}">Přečíst rešerši nahlas</button>
     <button class="btn btn-ghost js-copy-text" type="button" data-copied-label="Rešerše zkopírována" data-copy-text="{{ (research_result.result_text or '')|e }}">Kopírovat rešerši</button>
@@ -38,9 +38,18 @@
       <a href="{{ item.url }}" target="_blank" rel="noopener">{{ item.title }}</a>
     {% endfor %}
   </div>
-  {% for item in research_result.citations[:5] %}
-    {% if item.snippet %}<p class="muted">{{ item.snippet }}</p>{% endif %}
-  {% endfor %}
+  <div class="citation-list">
+    {% for item in research_result.citations[:6] %}
+    <article class="citation-item">
+      <h3><a href="{{ item.url }}" target="_blank" rel="noopener">{{ item.title }}</a></h3>
+      <p class="citation-url"><a href="{{ item.url }}" target="_blank" rel="noopener">{{ item.url }}</a></p>
+      {% if item.snippet %}<p class="muted">{{ item.snippet|render_rich_text }}</p>{% endif %}
+      <div class="hero-actions compact-actions">
+        <a class="btn btn-ghost" href="{{ item.url }}" target="_blank" rel="noopener">Otevřít zdroj</a>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
 </section>
 {% endif %}
 
