@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import re
 import base64
 import hashlib
 
@@ -39,15 +40,19 @@ def _get_fernet() -> Fernet:
     return Fernet(_build_fernet_key(secret))
 
 
+def _compact_secretish(value: str | None) -> str:
+    return re.sub(r"\s+", "", value or "")
+
+
 def mask_api_key(value: str | None) -> str | None:
-    clean = (value or "").strip()
+    clean = _compact_secretish(value)
     if not clean:
         return None
     return clean[-4:] if len(clean) >= 4 else clean
 
 
 def encrypt_api_key(value: str | None) -> str | None:
-    clean = (value or "").strip()
+    clean = _compact_secretish(value)
     if not clean:
         return None
     fernet = _get_fernet()
@@ -62,6 +67,11 @@ def decrypt_api_key(value: str | None) -> str | None:
         return fernet.decrypt(value.encode("utf-8")).decode("utf-8")
     except (TtsSecretUnavailableError, InvalidToken):
         return None
+
+
+def clear_api_key(connection: UserTtsConnection) -> None:
+    connection.api_key_encrypted = None
+    connection.api_key_last4 = None
 
 
 def get_user_tts_connection(db: Session, user: User, provider_code: str = DEFAULT_PROVIDER_CODE) -> UserTtsConnection | None:
@@ -138,14 +148,14 @@ def save_user_tts_connection(
 ) -> tuple[UserTtsConnection, str | None]:
     connection = get_or_create_user_tts_connection(db, user, provider_code=provider_code)
     connection.display_name = (display_name or DEFAULT_DISPLAY_NAME).strip() or DEFAULT_DISPLAY_NAME
-    connection.voice_id = (voice_id or "").strip() or None
+    connection.voice_id = _compact_secretish(voice_id) or None
     connection.model_id = (model_id or DEFAULT_MODEL_ID).strip() or DEFAULT_MODEL_ID
     connection.note = (note or "").strip() or None
     connection.is_enabled = bool(is_enabled)
     connection.updated_at = datetime.now(timezone.utc)
 
     warning = None
-    clean_key = (api_key or "").strip()
+    clean_key = _compact_secretish(api_key)
     if clean_key:
         try:
             connection.api_key_encrypted = encrypt_api_key(clean_key)

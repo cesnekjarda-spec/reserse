@@ -43,13 +43,15 @@
   <p class="muted">Když vyplníš API key, Voice ID a rozhraní zapneš, může aplikace generovat ElevenLabs audio pro poslechový script a pro živé externí rešerše. Původní audio větev aplikace zůstává beze změny.</p>
   <form method="post" action="/dashboard/tts" class="stack-form admin-create-grid">
     <label>Název poskytovatele<input type="text" name="display_name" value="{{ tts_connection.display_name }}"></label>
-    <label>Voice ID<input type="text" name="voice_id" value="{{ tts_connection.voice_id }}" placeholder="např. Rachel nebo vlastní voice id"></label>
+    <label>Voice ID<input type="text" name="voice_id" value="{{ tts_connection.voice_id }}" placeholder="např. pqHfZKP75CvOlQylNhV4"></label>
     <label>Model ID<input type="text" name="model_id" value="{{ tts_connection.model_id }}"></label>
-    <label class="full">API key<input type="password" name="api_key" value=""></label>
+    <label class="full">API key<input type="password" name="api_key" value="" autocomplete="off"></label>
+    <label class="switch-inline"><input type="checkbox" name="clear_stored_key"> Nejdřív smazat dříve uložený API key</label>
     <label class="full">Poznámka<textarea name="note" rows="2">{{ tts_connection.note }}</textarea></label>
     <label class="switch-inline"><input type="checkbox" name="is_enabled" {% if tts_connection.is_enabled %}checked{% endif %}> Povolit přímé ElevenLabs TTS</label>
     <div class="hero-actions compact-actions">
       <button class="btn btn-secondary" type="submit">Uložit rozhraní</button>
+      <button class="btn btn-ghost" formaction="/dashboard/tts/test" formmethod="post" type="submit">Otestovat uložené připojení</button>
       {% if tts_connection.api_key_last4 %}<span class="mini-meta">uložený klíč končí na …{{ tts_connection.api_key_last4 }}</span>{% else %}<span class="mini-meta">zatím bez uloženého klíče</span>{% endif %}
     </div>
   </form>

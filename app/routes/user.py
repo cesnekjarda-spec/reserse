@@ -393,6 +393,7 @@ def update_tts_interface(
     api_key: str = Form(default=""),
     note: str = Form(default=""),
     is_enabled: str | None = Form(default=None),
+    clear_stored_key: str | None = Form(default=None),
 ):
     current_user = require_user(request)
     if not current_user:
@@ -401,6 +402,11 @@ def update_tts_interface(
     with SessionLocal() as db:
         fresh_user = db.get(User, current_user.id)
         if fresh_user:
+            if clear_stored_key:
+                connection = get_or_create_user_tts_connection(db, fresh_user)
+                clear_api_key(connection)
+                db.add(connection)
+                db.commit()
             _, warning = save_user_tts_connection(
                 db,
                 fresh_user,
@@ -418,6 +424,40 @@ def update_tts_interface(
             return RedirectResponse(url=redirect_url, status_code=303)
     return RedirectResponse(url="/dashboard", status_code=303)
 
+
+
+
+@router.post("/dashboard/tts/test")
+def test_tts_interface(request: Request):
+    current_user = require_user(request)
+    if not current_user:
+        return RedirectResponse(url="/login", status_code=303)
+
+    with SessionLocal() as db:
+        connection = get_or_create_user_tts_connection(db, current_user)
+        secret = decrypt_api_key(connection.api_key_encrypted)
+        if not connection.is_enabled:
+            return PlainTextResponse("ElevenLabs je u tohoto účtu vypnuté.", status_code=400)
+        if not secret:
+            return PlainTextResponse("Chybí nebo nejde dešifrovat uložený ElevenLabs API klíč.", status_code=400)
+        if not connection.voice_id:
+            return PlainTextResponse("Chybí ElevenLabs Voice ID.", status_code=400)
+        try:
+            _ = synthesize_elevenlabs_mp3_bytes(
+                "Dobry den, toto je kratky test.",
+                api_key=secret,
+                voice_id=connection.voice_id,
+                model_id=connection.model_id or DEFAULT_MODEL_ID,
+            )
+            return PlainTextResponse(
+                f"ElevenLabs test OK. Voice ID {connection.voice_id}, ulozeny klic konci na …{connection.api_key_last4 or '????' }.",
+                status_code=200,
+            )
+        except Exception as exc:
+            return PlainTextResponse(
+                f"ElevenLabs test chyba. Voice ID {connection.voice_id}, ulozeny klic konci na …{connection.api_key_last4 or '????' }. Detail: {exc}",
+                status_code=502,
+            )
 
 @router.post("/articles/{article_id}/read")
 def mark_read(request: Request, article_id: str):

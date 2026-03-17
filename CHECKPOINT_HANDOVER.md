@@ -24,3 +24,6 @@ Tento checkpoint je určen jako samostatně nasaditelná verze nad čistou datab
 - Exa a Tavily teď umí skutečné serverové API volání místo pouhého launcheru.
 - ElevenLabs umí přímé MP3 generování z poslechového scriptu i z externí rešerše přes uložený uživatelský účet.
 - USER_SECRET_ENCRYPTION_KEY už může být libovolný dlouhý tajný řetězec; aplikace si z něj sama odvodí platný Fernet klíč.
+
+
+- ElevenLabs debug: přidán test uloženého připojení a volba pro smazání starého uloženého API keye.
