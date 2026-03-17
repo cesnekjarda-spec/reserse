@@ -34,6 +34,7 @@ from app.services.research_extension_service import (
     build_external_research_prompt,
     build_provider_launcher_context,
 )
+from app.services.pricing_service import get_user_monthly_topic_pricing
 from app.services.tts_connection_service import (
     DEFAULT_MODEL_ID,
     DEFAULT_PROVIDER_CODE,
@@ -77,6 +78,8 @@ def dashboard(request: Request):
         provider_preferences = get_user_provider_preferences(db, current_user)
         enabled_providers = get_enabled_providers_for_user(db, current_user)
         tts_connection = get_or_create_user_tts_connection(db, current_user)
+
+        pricing_summary = get_user_monthly_topic_pricing(db, user_id=current_user.id)
 
         if selected_ids:
             articles = db.scalars(
@@ -180,6 +183,7 @@ def dashboard(request: Request):
             read_ids=read_ids,
             tts_connection=describe_connection(tts_connection),
             can_generate_tts=bool(tts_connection.is_enabled and tts_connection.api_key_encrypted and tts_connection.voice_id),
+            pricing_summary=pricing_summary,
         ),
     )
 

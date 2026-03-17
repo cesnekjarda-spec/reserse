@@ -5,19 +5,19 @@
   <div>
     <div class="eyebrow">Katalog bloků</div>
     <h1>Témata a ceny</h1>
-    <p>Správa názvu, pořadí, aktivity i ceny za jednotlivý blok. Výchozí obchodní nastavení je nyní 1 Kč / blok.</p>
+    <p>Správa názvu, pořadí, aktivity i ceny za jednotlivý blok. Výchozí obchodní nastavení je nyní 1 Kč / měsíc za aktivní okruh.</p>
   </div>
   <div class="hero-actions">
     <form method="post" action="/admin/topics/set-all-price" class="inline-form compact-inline-form">
       <input type="hidden" name="price_czk" value="1">
-      <button class="btn" type="submit">Nastavit všem 1 Kč</button>
+      <button class="btn" type="submit">Nastavit všem 1 Kč / měsíc</button>
     </form>
   </div>
 </section>
 
 <section class="stats-grid">
   <article class="metric-card"><strong>{{ topics|length }}</strong><span>celkem témat</span></article>
-  <article class="metric-card"><strong>{{ total_price }}</strong><span>součet aktivních cen v CZK</span></article>
+  <article class="metric-card"><strong>{{ total_price }}</strong><span>součet aktivních měsíčních cen v CZK</span></article>
 </section>
 
 <section class="card">
@@ -50,7 +50,7 @@
           <label class="full">Popis<textarea name="description" rows="3">{{ topic.description or '' }}</textarea></label>
         </div>
         <div class="topic-edit-actions">
-          <span class="mini-meta">Aktuálně {{ topic.price_czk }} Kč / blok</span>
+          <span class="mini-meta">Aktuálně {{ topic.price_czk }} Kč / měsíc</span>
           <button class="btn btn-secondary" type="submit">Uložit změny</button>
         </div>
       </form>

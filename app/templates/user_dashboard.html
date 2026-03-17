@@ -20,9 +20,10 @@
 
 <section class="card">
   <div class="section-head"><div><div class="eyebrow">Nastavení</div><h2>Moje témata</h2></div></div>
+  <p class="muted">Každý aktivní okruh je veden jako měsíční služba. Aktuálně máš vybráno <strong>{{ pricing_summary.active_topic_count }}</strong> okruhů za <strong>{{ pricing_summary.monthly_amount_czk }} Kč / měsíc</strong>.</p>
   <form method="post" action="/dashboard/subscriptions" class="topic-checkboxes">
     {% for topic in topics %}
-      <label class="checkbox-item"><input type="checkbox" name="topic_ids" value="{{ topic.id }}" {% if topic.id in selected_ids %}checked{% endif %}> {{ topic.name }}</label>
+      <label class="checkbox-item"><input type="checkbox" name="topic_ids" value="{{ topic.id }}" {% if topic.id in selected_ids %}checked{% endif %}> {{ topic.name }} <span class="muted">· {{ topic.price_czk }} Kč / měsíc</span></label>
     {% endfor %}
     <button class="btn" type="submit">Uložit výběr</button>
   </form>
@@ -62,7 +63,7 @@
   <div class="provider-grid">
     {% for topic in selected_topics %}
     <article class="topic-card">
-      <div class="topic-meta-row"><span class="topic-chip">{{ topic.name }}</span></div>
+      <div class="topic-meta-row"><span class="topic-chip">{{ topic.name }}</span><span class="status-badge status-empty">{{ topic.price_czk }} Kč / měsíc</span></div>
       <p>Otevři navazující rešerši typu „5 nejnovějších a nejdůležitějších zpráv“ v preferovaných nástrojích.</p>
       <div class="chip-row">
         {% for link in topic_external_links.get(topic.id, []) %}
