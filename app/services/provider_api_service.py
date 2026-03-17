@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import re
 from typing import Any
 
 import httpx
@@ -77,6 +78,65 @@ def _citations_from_tavily(items: list[dict[str, Any]] | None) -> list[dict[str,
             "snippet": shorten_text(snippet, 320) if snippet else "",
         })
     return citations
+
+
+def _extract_tavily_query(prompt: str) -> str:
+    clean = normalize_whitespace(prompt)
+    if len(clean) <= 380:
+        return clean
+
+    topic_match = re.search(r"tématu\s+([^\.]+)", clean, flags=re.IGNORECASE)
+    topic = topic_match.group(1).strip() if topic_match else "dané téma"
+
+    key_points_match = re.search(r"Klíčové body:\s*(.+)$", clean, flags=re.IGNORECASE)
+    key_points_raw = key_points_match.group(1).strip() if key_points_match else ""
+    key_points = []
+    if key_points_raw:
+        for part in re.split(r"[;,.]", key_points_raw):
+            item = normalize_whitespace(part)
+            if item and len(item) > 2:
+                key_points.append(item)
+            if len(key_points) >= 4:
+                break
+
+    urls = re.findall(r"https?://\S+", clean)
+    domain_hints = []
+    for url in urls[:3]:
+        domain = re.sub(r"^https?://", "", url).split("/")[0].strip()
+        domain = domain.replace("www.", "")
+        if domain:
+            domain_hints.append(domain)
+
+    parts = [
+        f"Poctivá webová rešerše: {topic}",
+        "Zaměř se na nové informace za posledních 7 až 14 dní",
+        "odděl jistá fakta od nejistot",
+        "přidej zdroje a co sledovat dál",
+    ]
+    if key_points:
+        parts.append("Klíčové okruhy: " + ", ".join(key_points))
+    if domain_hints:
+        parts.append("Vezmi v úvahu i tyto zdrojové okruhy: " + ", ".join(domain_hints))
+
+    query = ". ".join(parts)
+    return shorten_text(normalize_whitespace(query), 380)
+
+
+def _tavily_answer_from_citations(citations: list[dict[str, str]]) -> str:
+    if not citations:
+        return ""
+
+    lines: list[str] = []
+    for idx, item in enumerate(citations[:5]):
+        title = normalize_whitespace(item.get("title") or f"Zdroj {idx + 1}")
+        snippet = normalize_whitespace(item.get("snippet") or "")
+        if snippet:
+            lines.append(f"{idx + 1}. {title}: {shorten_text(snippet, 220)}")
+        else:
+            lines.append(f"{idx + 1}. {title}.")
+
+    summary = " ".join(lines)
+    return normalize_whitespace(shorten_text(summary, 1200))
 
 
 def _listen_text(provider_name: str, result_text: str, citations: list[dict[str, str]]) -> str:
@@ -160,9 +220,9 @@ def _run_tavily(prompt: str) -> ProviderResearchResult:
         "Content-Type": "application/json",
     }
 
-    # Tavily Search funguje nejspolehlivěji s kratším, vyhledávacím dotazem.
-    # Příliš direktivní nebo dlouhé promptové zadání může vracet 400.
-    search_query = shorten_text(normalize_whitespace(prompt), 900)
+    # Tavily má limit délky query 400 znaků. Proto prompt převádíme na kratší
+    # vyhledávací dotaz, který zachová téma, klíčové body a případné zdrojové okruhy.
+    search_query = _extract_tavily_query(prompt)
     payload_primary = {
         "query": search_query,
         "auto_parameters": True,
@@ -197,11 +257,7 @@ def _run_tavily(prompt: str) -> ProviderResearchResult:
     answer = normalize_whitespace(str((data or {}).get("answer") or ""))
     citations = _citations_from_tavily(data.get("results"))
     if not answer and citations:
-        answer = " ".join(
-            f"Zdroj {idx + 1}: {item['title']}. {item['snippet']}"
-            for idx, item in enumerate(citations[:4])
-        )
-        answer = normalize_whitespace(answer)
+        answer = _tavily_answer_from_citations(citations)
     if not answer:
         answer = "Tavily nevrátila hotovou textovou odpověď, ale níže jsou nalezené zdroje."
 
