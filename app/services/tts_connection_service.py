@@ -111,15 +111,15 @@ def describe_connection(connection: UserTtsConnection | None) -> dict:
             "api_key_last4": None,
             "is_enabled": False,
             "note": "",
-            "status": "Rozhraní je připravené, klíč zatím není uložený.",
+            "status": "Rozhraní je připravené. Pro free ElevenLabs účty může přímé serverové volání na sdílené IP selhávat, proto je nejspolehlivější export scriptu.",
         }
 
     has_api_key = bool(connection.api_key_encrypted)
     status = "Rozhraní je bez API klíče."
     if has_api_key and connection.is_enabled:
-        status = "ElevenLabs je aktivní a může generovat audio přes uložený účet uživatele."
+        status = "Přímé ElevenLabs TTS je zapnuté. U free účtů na sdíleném serveru může selhat; spolehlivější je export scriptu nebo placený účet."
     elif has_api_key:
-        status = "Klíč je uložený, ale přímé TTS volání je vypnuté."
+        status = "Klíč je uložený. Přímé TTS volání je vypnuté a můžeš používat jen export scriptu pro ruční vložení do ElevenLabs."
 
     return {
         "provider_code": connection.provider_code,

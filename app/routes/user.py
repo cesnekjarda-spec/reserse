@@ -52,6 +52,10 @@ def require_user(request: Request):
     return getattr(request.state, "current_user", None)
 
 
+def _clean_export_text(value: str) -> str:
+    return (value or "").replace("\r\n", "\n").strip()
+
+
 @router.get("/dashboard", response_class=HTMLResponse)
 def dashboard(request: Request):
     current_user = require_user(request)
@@ -314,6 +318,29 @@ def research_launcher(
     )
 
 
+@router.post("/tts/export.txt")
+def export_tts_text(
+    request: Request,
+    title: str = Form(default="reserse"),
+    text: str = Form(default=""),
+):
+    current_user = require_user(request)
+    if not current_user:
+        return RedirectResponse(url="/login", status_code=303)
+
+    clean_text = _clean_export_text(text)
+    if not clean_text:
+        return PlainTextResponse("Chybí text pro export.", status_code=400)
+
+    safe_title = "".join(ch for ch in (title or "reserse") if ch.isalnum() or ch in ("-", "_", " " )).strip().replace(" ", "-") or "reserse"
+    filename = f"{safe_title}.txt"
+    return PlainTextResponse(
+        clean_text,
+        media_type="text/plain; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
 @router.post("/tts/elevenlabs.mp3")
 def elevenlabs_text_to_speech(
     request: Request,
@@ -345,7 +372,13 @@ def elevenlabs_text_to_speech(
                 model_id=connection.model_id or DEFAULT_MODEL_ID,
             )
         except Exception as exc:
-            return PlainTextResponse(f"ElevenLabs API chyba: {exc}", status_code=502)
+            detail = str(exc)
+            if "401 Unauthorized" in detail:
+                detail = (
+                    "401 Unauthorized. ElevenLabs free účet může na sdílené serverové IP selhat, i když lokální test funguje. "
+                    "Pro spolehlivé použití využij export scriptu nebo placený účet. Původní detail: " + detail
+                )
+            return PlainTextResponse(f"ElevenLabs API chyba: {detail}", status_code=502)
 
     safe_title = "".join(ch for ch in (title or "reserse") if ch.isalnum() or ch in ("-", "_", " ")).strip().replace(" ", "-") or "reserse"
     filename = f"{safe_title}.mp3"
@@ -454,8 +487,14 @@ def test_tts_interface(request: Request):
                 status_code=200,
             )
         except Exception as exc:
+            detail = str(exc)
+            if "401 Unauthorized" in detail:
+                detail = (
+                    "401 Unauthorized. U free ElevenLabs účtů může přímé serverové volání ze sdílené IP selhávat, i když lokální test vrací MP3. "
+                    "Pro běžné použití využij export scriptu nebo placený účet. Původní detail: " + detail
+                )
             return PlainTextResponse(
-                f"ElevenLabs test chyba. Voice ID {connection.voice_id}, ulozeny klic konci na …{connection.api_key_last4 or '????' }. Detail: {exc}",
+                f"ElevenLabs test chyba. Voice ID {connection.voice_id}, ulozeny klic konci na …{connection.api_key_last4 or '????' }. Detail: {detail}",
                 status_code=502,
             )
 

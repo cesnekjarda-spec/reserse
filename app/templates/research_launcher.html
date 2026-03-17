@@ -20,11 +20,16 @@
   <div class="hero-actions compact-actions">
     <button class="btn btn-secondary js-read-aloud" type="button" data-default-label="Přečíst rešerši nahlas" data-speech-text="{{ (research_result.listen_text or '')|replace('\n', ' ')|e }}">Přečíst rešerši nahlas</button>
     <button class="btn btn-ghost js-copy-text" type="button" data-copied-label="Rešerše zkopírována" data-copy-text="{{ (research_result.result_text or '')|e }}">Kopírovat rešerši</button>
+    <form method="post" action="/tts/export.txt" target="_blank" style="display:inline">
+      <input type="hidden" name="title" value="{{ provider_name|e }}-elevenlabs-script">
+      <textarea name="text" hidden>{{ research_result.listen_text or '' }}</textarea>
+      <button class="btn btn-ghost" type="submit">Export pro ElevenLabs TXT</button>
+    </form>
     {% if can_generate_tts %}
     <form method="post" action="/tts/elevenlabs.mp3" target="_blank" style="display:inline">
       <input type="hidden" name="title" value="{{ provider_name|e }}">
       <textarea name="text" hidden>{{ research_result.listen_text or '' }}</textarea>
-      <button class="btn btn-ghost" type="submit">ElevenLabs MP3</button>
+      <button class="btn btn-ghost" type="submit">ElevenLabs MP3 (experimental)</button>
     </form>
     {% endif %}
   </div>
@@ -71,6 +76,6 @@
     {% if tts_connection.voice_id %}<span class="keyword-chip">voice: {{ tts_connection.voice_id }}</span>{% endif %}
     {% if tts_connection.api_key_last4 %}<span class="keyword-chip">key: …{{ tts_connection.api_key_last4 }}</span>{% endif %}
   </div>
-  {% if not can_generate_tts %}<p class="muted">Aby se vygenerovalo ElevenLabs audio, je potřeba mít uložený API key, Voice ID a zapnuté ElevenLabs rozhraní.</p>{% endif %}
+  {% if can_generate_tts %}<p class="muted">Nejspolehlivější je exportovat tento poslechový text do TXT a vložit ho do ElevenLabs ručně. Přímé MP3 z aplikace zůstává jako experiment a bývá spolehlivější u placených účtů.</p>{% else %}<p class="muted">Aby se vygenerovalo ElevenLabs audio přímo z aplikace, je potřeba mít uložený API key, Voice ID a zapnuté rozhraní. I potom může free účet na sdíleném serveru selhat, proto je zde hlavně export scriptu.</p>{% endif %}
 </section>
 {% endblock %}
