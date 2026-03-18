@@ -103,7 +103,7 @@
         </div>
       </div>
       <details class="external-details">
-        <summary>Poslechový preview text</summary>
+        <summary>Krátké preview</summary>
         <div class="preline">{{ brief_listen_preview.get(brief.id, '') }}</div>
       </details>
       <div class="hero-actions compact-actions">
@@ -118,12 +118,13 @@
         <button
           class="btn btn-ghost js-read-aloud"
           type="button"
-          data-default-label="Přečíst poslechový script"
-          data-speech-text="{{ brief_listen_preview.get(brief.id, '')|replace('\n', ' ')|e }}"
+          data-default-label="Přečíst poslechovou rešerši"
+          data-speech-text="{{ brief_audio_payload.get(brief.id, {}).get('text', '')|replace('\n', ' ')|e }}"
         >
-          Přečíst poslechový script
+          Přečíst poslechovou rešerši
         </button>
         <a class="btn btn-ghost" href="/briefs/{{ brief.id }}/listen">Poslechový model</a>
+        <span class="muted" style="align-self:center;">Zdroj audio textu: <strong>{{ brief_audio_payload.get(brief.id, {}).get('label', 'Neznámý') }}</strong>{% if brief_audio_payload.get(brief.id, {}).get('reason') %} · {{ brief_audio_payload.get(brief.id, {}).get('reason') }}{% endif %}</span>
         <a class="btn btn-ghost" href="/briefs/{{ brief.id }}/audio.mp3" target="_blank" rel="noopener">Audio rešerše MP3</a>
       </div>
       <div class="provider-link-row">
