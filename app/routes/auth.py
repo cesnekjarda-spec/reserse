@@ -19,6 +19,7 @@ from app.services.auth_service import (
     upsert_vip_user,
 )
 from app.utils.templates import template_context
+from app.services.vip_pricing_sync_service import push_pricing_for_identity
 
 
 router = APIRouter()
@@ -161,6 +162,13 @@ def sso_consume(request: Request, token: str):
             user,
             ip_address=request.client.host if request.client else None,
             user_agent=request.headers.get("user-agent"),
+        )
+        push_pricing_for_identity(
+            db,
+            email=email,
+            username=username,
+            vip_member_id=str(claims.get("vip_member_id") or "").strip() or None,
+            sync_trigger="sso_consume",
         )
 
     target_url = "/admin" if effective_role == "admin" else "/dashboard"

@@ -44,6 +44,7 @@ from app.services.tts_connection_service import (
     save_user_tts_connection,
 )
 from app.utils.templates import template_context
+from app.services.vip_pricing_sync_service import push_user_pricing_to_vip
 
 
 router = APIRouter(tags=["user"])
@@ -406,6 +407,8 @@ def update_subscriptions(request: Request, topic_ids: list[str] = Form(default=[
         for topic_id in topic_ids:
             db.add(UserTopicSubscription(user_id=current_user.id, topic_id=topic_id))
         db.commit()
+        fresh_user = db.get(User, current_user.id)
+        push_user_pricing_to_vip(db, fresh_user, sync_trigger="subscriptions_update")
     return RedirectResponse(url="/dashboard", status_code=303)
 
 

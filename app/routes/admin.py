@@ -22,6 +22,7 @@ from app.services.sync_service import run_sync
 from app.utils.templates import template_context
 from app.utils.text import slugify
 from app.services.auth_service import create_user, get_user_by_email, get_user_by_username
+from app.services.vip_pricing_sync_service import push_pricing_for_all_subscribed_users, push_pricing_for_topic_subscribers
 
 
 router = APIRouter(prefix='/admin', tags=['admin'])
@@ -214,6 +215,7 @@ def admin_topics_update(
             topic.is_active = is_active == 'on'
             db.add(topic)
             db.commit()
+            push_pricing_for_topic_subscribers(db, topic.id, sync_trigger='topic_update')
     return RedirectResponse(url='/admin/topics', status_code=303)
 
 
@@ -227,6 +229,7 @@ def admin_topics_set_all_price(request: Request, price_czk: int = Form(1)):
             topic.price_czk = max(0, price_czk)
             db.add(topic)
         db.commit()
+        push_pricing_for_all_subscribed_users(db, sync_trigger='topic_bulk_update')
     return RedirectResponse(url='/admin/topics', status_code=303)
 
 

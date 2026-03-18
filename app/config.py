@@ -23,6 +23,8 @@ class Settings(BaseSettings):
     vip_sso_enabled: bool = True
     vip_sso_shared_secret: str | None = None
     vip_sso_issuer: str = "vip-klub"
+    vip_pricing_sync_url: str | None = None
+    vip_pricing_sync_timeout_seconds: int = 12
     # LEGACY H2B fallback only. Preferred active flow is H2C-R via /sso/consume.
     vip_internal_shared_secret: str | None = None
     vip_allow_jit_provisioning: bool = True
