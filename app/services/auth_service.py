@@ -1,160 +1,185 @@
-from sqlalchemy import or_, select
-from sqlalchemy.orm import Session
+from __future__ import annotations
 
-from app.models.session import UserSession
-from app.models.user import User
-from app.utils.security import (
-    generate_session_token,
-    hash_password,
-    hash_token,
-    utcnow,
-    verify_password,
-)
+from io import BytesIO
+from typing import Iterable
 
+import httpx
+from google import genai
+from google.genai.types import GenerateContentConfig
+from gtts import gTTS
 
-def normalize_identity(value: str) -> str:
-    return value.strip()
+from app.config import settings
+from app.models.article import Article
+from app.models.brief import Brief
+from app.utils.text import normalize_whitespace, shorten_text
 
 
-def get_user_by_email(db: Session, email: str) -> User | None:
-    stmt = select(User).where(User.email == email.strip().lower())
-    return db.scalar(stmt)
+def _article_title_block(related_articles: list[Article], limit: int = 4) -> str:
+    titles = [article.title for article in related_articles[:limit] if article.title]
+    return " ".join(f"Důležitý zdroj: {shorten_text(title, 160)}." for title in titles)
 
 
-def get_user_by_username(db: Session, username: str) -> User | None:
-    stmt = select(User).where(User.username == username.strip())
-    return db.scalar(stmt)
+def build_listening_script_preview(brief: Brief, related_articles: list[Article]) -> str:
+    intro = f"Poslechový přehled k tématu {brief.topic.name if brief.topic else 'téma'}."
+    return normalize_whitespace(
+        f"{intro} {brief.title}. Hlavní shrnutí: {brief.summary}. "
+        f"Teď stručně k tomu, co se skutečně děje: {brief.what_happened}. "
+        f"Pro posluchače je důležité hlavně toto: {brief.why_it_matters}. "
+        f"A dál se vyplatí sledovat: {brief.watchlist}. "
+        f"{_article_title_block(related_articles, limit=3)}"
+    )
 
 
-def get_user_by_identity(db: Session, identity: str) -> User | None:
-    clean = normalize_identity(identity)
-    stmt = select(User).where(
-        or_(
-            User.email == clean.lower(),
-            User.username == clean,
-            User.username == clean.lower(),
-            User.username == clean.capitalize(),
+def _build_fallback_script(brief: Brief, related_articles: list[Article]) -> str:
+    topic_name = brief.topic.name if brief.topic else "téma"
+    source_block = _article_title_block(related_articles)
+
+    parts = [
+        f"Operativní poslechová rešerše k tématu {topic_name}.",
+        f"Hlavní linie dnešního vývoje je tato: {brief.summary}.",
+        f"V praxi se právě děje toto: {brief.what_happened}.",
+        f"Pro posluchače je důležité hlavně to, že {brief.why_it_matters}.",
+        f"V dalších dnech stojí za sledování zejména toto: {brief.watchlist}.",
+    ]
+
+    if source_block:
+        parts.append(f"Rešerše vychází mimo jiné z těchto podkladů: {source_block}")
+
+    parts.append("Tímto základní poslechová rešerše končí.")
+    return normalize_whitespace(" ".join(parts))
+
+
+def build_listening_script_from_text(title: str, body_text: str, topic_name: str | None = None) -> str:
+    topic_intro = f" k tématu {topic_name}" if topic_name else ""
+    return normalize_whitespace(
+        f"Poslechový přepis{topic_intro}. {title}. "
+        f"{body_text} "
+        f"Konec přehledu."
+    )
+
+
+def _collect_public_urls(related_articles: Iterable[Article]) -> list[str]:
+    urls: list[str] = []
+    seen: set[str] = set()
+    for article in related_articles:
+        if not article.url:
+            continue
+        url = article.url.strip()
+        if not url.startswith("http"):
+            continue
+        if url in seen:
+            continue
+        seen.add(url)
+        urls.append(url)
+        if len(urls) >= settings.audio_url_limit:
+            break
+    return urls
+
+
+def _gemini_audio_script(brief: Brief, related_articles: list[Article]) -> str | None:
+    if not settings.gemini_api_key:
+        return None
+
+    urls = _collect_public_urls(related_articles)
+    if not urls:
+        return None
+
+    prompt = (
+        "Pracuj jako zkušený rešeršér a rozhlasový editor. "
+        "Na základě následujících veřejných URL vytvoř v češtině krátkou, věcnou a poslouchatelnou operativní rešerši. "
+        "Nepoužívej odrážky. Piš v plných větách, přirozeně pro audio. "
+        "Nejdřív jednou větou uveď hlavní téma, pak popiš 3 až 5 nejdůležitějších zjištění, proč jsou důležitá a co dál sledovat. "
+        f"Zaměření tématu: {brief.topic.name if brief.topic else 'téma'}. "
+        f"Výchozí briefing: {brief.summary}. {brief.what_happened}. {brief.why_it_matters}. {brief.watchlist}. "
+        "Pracuj s těmito URL: " + " ".join(urls)
+    )
+
+    try:
+        client = genai.Client(api_key=settings.gemini_api_key)
+        response = client.models.generate_content(
+            model=settings.gemini_model,
+            contents=prompt,
+            config=GenerateContentConfig(tools=[{"url_context": {}}]),
         )
-    )
-    return db.scalar(stmt)
-
-
-def create_user(db: Session, username: str, email: str, password: str, role: str = "user") -> User:
-    user = User(
-        username=username.strip(),
-        email=email.strip().lower(),
-        password_hash=hash_password(password),
-        role=role,
-        is_active=True,
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    return user
-
-
-def upsert_user(db: Session, username: str, email: str, password: str, role: str = "user") -> User:
-    existing = get_user_by_email(db, email) or get_user_by_username(db, username)
-    if existing:
-        existing.username = username.strip()
-        existing.email = email.strip().lower()
-        existing.password_hash = hash_password(password)
-        existing.role = role
-        existing.is_active = True
-        db.add(existing)
-        db.commit()
-        db.refresh(existing)
-        return existing
-    return create_user(db, username=username, email=email, password=password, role=role)
-
-
-def authenticate_user(db: Session, identity: str, password: str) -> User | None:
-    user = get_user_by_identity(db, identity)
-    if not user or not user.is_active:
-        return None
-    if not verify_password(password, user.password_hash):
-        return None
-    user.last_login_at = utcnow()
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    return user
-
-
-def create_session(
-    db: Session,
-    user: User,
-    ip_address: str | None = None,
-    user_agent: str | None = None,
-) -> str:
-    raw_token = generate_session_token()
-    session = UserSession(
-        user_id=user.id,
-        session_token_hash=hash_token(raw_token),
-        ip_address=ip_address,
-        user_agent=user_agent,
-    )
-    db.add(session)
-    db.commit()
-    return raw_token
-
-
-def revoke_session(db: Session, raw_token: str | None) -> None:
-    if not raw_token:
-        return
-    stmt = select(UserSession).where(UserSession.session_token_hash == hash_token(raw_token))
-    session = db.scalar(stmt)
-    if session and session.revoked_at is None:
-        session.revoked_at = utcnow()
-        db.add(session)
-        db.commit()
-
-
-def get_user_from_session_token(db: Session, raw_token: str | None) -> User | None:
-    if not raw_token:
-        return None
-    stmt = (
-        select(UserSession)
-        .where(UserSession.session_token_hash == hash_token(raw_token))
-        .where(UserSession.revoked_at.is_(None))
-    )
-    session = db.scalar(stmt)
-    if not session:
+        text = normalize_whitespace(getattr(response, "text", "") or "")
+        return text or None
+    except Exception:
         return None
 
-    expires_at = session.expires_at
-    now = utcnow()
-    if expires_at.tzinfo is None:
-        expires_at = expires_at.replace(tzinfo=now.tzinfo)
 
-    if expires_at < now:
-        session.revoked_at = now
-        db.add(session)
-        db.commit()
-        return None
-    return db.get(User, session.user_id)
+def build_audio_research_payload(brief: Brief, related_articles: list[Article]) -> dict:
+    urls = _collect_public_urls(related_articles)
+    has_api_key = bool(settings.gemini_api_key)
+
+    if has_api_key and urls:
+        text = _gemini_audio_script(brief, related_articles)
+        if text:
+            return {
+                "text": text,
+                "source": "gemini",
+                "label": "Gemini",
+                "reason": "Výstup vznikl přes Gemini nad veřejnými URL článků.",
+            }
+        return {
+            "text": _build_fallback_script(brief, related_articles),
+            "source": "fallback",
+            "label": "Fallback",
+            "reason": "Gemini bylo k dispozici, ale pro tento brief nevrátilo použitelný text.",
+        }
+
+    if not has_api_key:
+        return {
+            "text": _build_fallback_script(brief, related_articles),
+            "source": "fallback",
+            "label": "Fallback",
+            "reason": "Gemini není aktivní, protože chybí GEMINI_API_KEY.",
+        }
+
+    return {
+        "text": _build_fallback_script(brief, related_articles),
+        "source": "fallback",
+        "label": "Fallback",
+        "reason": "Gemini se pro tento brief nepoužilo, protože chybí veřejné URL článků.",
+    }
 
 
+def build_audio_research_text(brief: Brief, related_articles: list[Article]) -> str:
+    payload = build_audio_research_payload(brief, related_articles)
+    return payload.get("text", "")
 
-def upsert_vip_user(db: Session, username: str, email: str, role: str = "user", is_active: bool = True) -> User:
-    existing = get_user_by_email(db, email) or get_user_by_username(db, username)
-    if existing:
-        existing.username = username.strip()
-        existing.email = email.strip().lower()
-        existing.role = "admin" if role == "admin" else "user"
-        existing.is_active = bool(is_active)
-        db.add(existing)
-        db.commit()
-        db.refresh(existing)
-        return existing
-    user = User(
-        username=username.strip(),
-        email=email.strip().lower(),
-        password_hash=hash_password(generate_session_token()),
-        role="admin" if role == "admin" else "user",
-        is_active=bool(is_active),
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    return user
+
+def synthesize_mp3_bytes(text: str) -> bytes:
+    fp = BytesIO()
+    tts = gTTS(text=text, lang=settings.audio_tts_lang)
+    tts.write_to_fp(fp)
+    return fp.getvalue()
+
+
+def synthesize_elevenlabs_mp3_bytes(
+    text: str,
+    *,
+    api_key: str,
+    voice_id: str,
+    model_id: str | None = None,
+) -> bytes:
+    clean_text = normalize_whitespace(text)
+    if not clean_text:
+        raise ValueError("Text pro ElevenLabs je prázdný")
+    if not voice_id:
+        raise ValueError("Chybí ElevenLabs voice_id")
+    url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+    params = {"output_format": "mp3_44100_128"}
+    payload = {
+        "text": shorten_text(clean_text, 4500),
+        "model_id": model_id or "eleven_multilingual_v2",
+        "language_code": "cs",
+    }
+    headers = {
+        "xi-api-key": api_key,
+        "Content-Type": "application/json",
+        "Accept": "audio/mpeg",
+    }
+    with httpx.Client(timeout=settings.provider_request_timeout_seconds) as client:
+        response = client.post(url, params=params, json=payload, headers=headers)
+        response.raise_for_status()
+        return response.content
