@@ -57,9 +57,9 @@ def push_pricing_summary_to_vip(pricing_summary: dict, *, vip_member_id: str | N
         response = requests.post(
             target_url,
             headers={
-                'Authorization': f'Bearer {token}',
-                'Content-Type': 'application/json',
-            },
+    'X-Access-Token': f'Bearer {token}',
+    'Content-Type': 'application/json',
+},
             json=payload,
             timeout=max(3, int(settings.vip_pricing_sync_timeout_seconds or 12)),
         )
