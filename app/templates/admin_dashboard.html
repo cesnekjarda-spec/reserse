@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Reserse · Admin{% endblock %}
+{% block content %}
+<section class="panel-header card-soft-accent">
+  <div>
+    <div class="eyebrow">Admin centrum</div>
+    <h1>Řízení briefingů i externích launcherů</h1>
+    <p>Správa témat, zdrojů, draft briefů, providerů a uživatelských preferencí na jednom místě.</p>
+  </div>
+  <div class="hero-actions">
+    <form method="post" action="/admin/sync"><button class="btn" type="submit">Spustit RSS sync</button></form>
+    <a class="btn btn-secondary" href="/admin/briefs">Briefingy</a>
+    <a class="btn btn-ghost" href="/admin/providers">Provideři</a>
+  </div>
+</section>
+
+<section class="stats-grid admin-stats-grid">
+  <article class="metric-card"><strong>{{ topic_count }}</strong><span>témat</span></article>
+  <article class="metric-card"><strong>{{ source_count }}</strong><span>zdrojů</span></article>
+  <article class="metric-card"><strong>{{ article_count }}</strong><span>článků</span></article>
+  <article class="metric-card"><strong>{{ user_count }}</strong><span>uživatelů</span></article>
+  <article class="metric-card"><strong>{{ brief_count }}</strong><span>draft / celkem</span></article>
+  <article class="metric-card"><strong>{{ published_brief_count }}</strong><span>publikovaných briefů</span></article>
+  <article class="metric-card"><strong>{{ provider_count }}</strong><span>aktivních providerů</span></article>
+  <article class="metric-card"><strong>{{ total_topic_price }}</strong><span>součet měsíčních cen bloků</span></article>
+</section>
+
+<section class="content-grid two-up">
+  <article class="card">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Správa</div>
+        <h2>Rychlé akce</h2>
+      </div>
+    </div>
+    <div class="action-grid">
+      <a class="action-card" href="/admin/briefs"><strong>Briefingy</strong><span>Drafty, AutoRender all, publikace a hromadné akce.</span></a>
+      <a class="action-card" href="/admin/providers"><strong>Provideři</strong><span>Vrstva 2, deep-link šablony a aktivace providerů.</span></a>
+      <a class="action-card" href="/admin/topics"><strong>Témata</strong><span>Správa katalogu témat a cenových balíčků.</span></a>
+      <a class="action-card" href="/admin/sources"><strong>Zdroje</strong><span>RSS zdroje napojené na témata.</span></a>
+    </div>
+  </article>
+
+  <article class="card">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Synchronizace</div>
+        <h2>Poslední běhy</h2>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Čas</th><th>Spouštěč</th><th>Stav</th><th>Nové články</th><th>Chyby</th></tr></thead>
+        <tbody>
+          {% for run in last_runs %}
+          <tr>
+            <td>{{ run.created_at }}</td>
+            <td>{{ run.triggered_by }}</td>
+            <td>{{ run.status }}</td>
+            <td>{{ run.total_articles_created }}</td>
+            <td>{{ run.total_errors }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5">Zatím žádné synchronizace.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </article>
+</section>
+{% endblock %}

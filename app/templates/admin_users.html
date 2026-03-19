@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Reserse · Uživatelé{% endblock %}
+{% block content %}
+<section class="card">
+  <div class="section-head">
+    <div><div class="eyebrow">Účty</div><h1>Uživatelé</h1></div>
+  </div>
+  <form method="post" action="/admin/users" class="stack" style="margin-bottom:18px;">
+    <div class="grid-form">
+      <label>Uživatelské jméno<input type="text" name="username" required></label>
+      <label>E-mail<input type="email" name="email" required></label>
+      <label>Heslo<input type="password" name="password" required></label>
+      <label>Role
+        <select name="role">
+          <option value="user">user</option>
+          <option value="admin">admin</option>
+        </select>
+      </label>
+    </div>
+    <div><button class="btn" type="submit">Vytvořit účet</button></div>
+  </form>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Jméno</th><th>E-mail</th><th>Role</th><th>Aktivní</th><th>Vytvořen</th><th>Akce</th></tr></thead>
+      <tbody>
+      {% for user in users %}
+        <tr>
+          <td>{{ user.username }}</td>
+          <td>{{ user.email }}</td>
+          <td>{{ user.role }}</td>
+          <td>{{ 'ano' if user.is_active else 'ne' }}</td>
+          <td>{{ user.created_at }}</td>
+          <td>
+            <form method="post" action="/admin/users/{{ user.id }}/toggle">
+              <button class="btn btn-small" type="submit">{{ 'Deaktivovat' if user.is_active else 'Aktivovat' }}</button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

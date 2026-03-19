@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Reserse · Registrace{% endblock %}
+{% block content %}
+<section class="auth-shell">
+  <article class="card auth-card auth-card-large">
+    <div class="eyebrow">Nový účet</div>
+    <h1>Registrace</h1>
+    <p>Veřejná registrace je vypnutá. Účet v Reserse vytváří administrátor, nebo se vytvoří přes VIP bridge.</p>
+    {% if error %}<p class="error">{{ error }}</p>{% endif %}
+    {% if settings.allow_public_registration %}
+    <form method="post" class="stack">
+      <label>Uživatelské jméno<input type="text" name="username" required></label>
+      <label>E-mail<input type="email" name="email" required></label>
+      <label>Heslo<input type="password" name="password" required></label>
+      <label>Potvrzení hesla<input type="password" name="password_confirm" required></label>
+      <button class="btn" type="submit">Vytvořit účet</button>
+    </form>
+    {% else %}
+    <div class="card subtle"><div class="muted">Pokud potřebuješ účet, požádej administrátora nebo použij vstup z VIP aplikace.</div></div>
+    {% endif %}
+  </article>
+</section>
+{% endblock %}

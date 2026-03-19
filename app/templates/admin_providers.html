@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Reserse · Provideři{% endblock %}
+{% block content %}
+<section class="panel-header card-soft-accent">
+  <div>
+    <div class="eyebrow">Vrstva 2</div>
+    <h1>Externí provideři a launchery</h1>
+    <p>Tyto šablony vytvářejí připravené dotazy do externích nástrojů. Naše aplikace jejich obsah nepřebírá, pouze otevírá nové okno s připraveným dotazem.</p>
+  </div>
+</section>
+<section class="stats-grid">
+  <article class="metric-card"><strong>{{ providers|length }}</strong><span>providerů v katalogu</span></article>
+  <article class="metric-card"><strong>{{ preference_count }}</strong><span>uživatelských preferencí</span></article>
+</section>
+<section class="card">
+  <div class="provider-grid">
+    {% for provider in providers %}
+    <article class="topic-card">
+      <div class="topic-meta-row">
+        <span class="topic-chip">{{ provider.name }}</span>
+        <span class="status-badge {{ 'status-published' if provider.is_active else 'status-empty' }}">{{ 'aktivní' if provider.is_active else 'vypnutý' }}</span>
+      </div>
+      <p>{{ provider.description }}</p>
+      <div class="url-cell">{{ provider.url_template }}</div>
+      <form method="post" action="/admin/providers/{{ provider.id }}/toggle" class="hero-actions compact-actions">
+        <button class="btn {{ 'btn-secondary' if provider.is_active else '' }}" type="submit">{{ 'Vypnout' if provider.is_active else 'Zapnout' }}</button>
+      </form>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
