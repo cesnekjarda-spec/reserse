@@ -13,7 +13,6 @@ from app.models.subscription import UserArticleRead, UserTopicSubscription
 from app.models.topic import Topic
 from app.models.user import User
 from app.services.audio_service import (
-    build_audio_research_payload,
     build_audio_research_text,
     build_listening_script_from_text,
     build_listening_script_preview,
@@ -246,8 +245,8 @@ def brief_listen_script(request: Request, brief_id: str):
                 .options(joinedload(Article.source).joinedload(Source.topic))
                 .where(Article.id.in_(brief.article_ids))
             ).unique().all()
-        listen_payload = build_audio_research_payload(brief, related_rows)
-        listen_text = listen_payload.get("text", "")
+        audio_payload = build_audio_research_payload(brief, related_rows)
+        listen_text = audio_payload.get("text", "")
         tts_connection = get_or_create_user_tts_connection(db, current_user)
 
     return request.app.state.templates.TemplateResponse(
@@ -256,8 +255,7 @@ def brief_listen_script(request: Request, brief_id: str):
             request,
             brief=brief,
             listen_text=listen_text,
-            listen_source_label=listen_payload.get("label", "Neznámý"),
-            listen_source_reason=listen_payload.get("reason", ""),
+            audio_payload=audio_payload,
             related_articles=related_rows,
             tts_connection=describe_connection(tts_connection),
             can_generate_tts=bool(tts_connection.is_enabled and tts_connection.api_key_encrypted and tts_connection.voice_id),
@@ -282,7 +280,8 @@ def brief_listen_script_txt(request: Request, brief_id: str):
             related_rows = db.scalars(
                 select(Article).where(Article.id.in_(brief.article_ids))
             ).all()
-        listen_text = build_audio_research_text(brief, related_rows)
+        audio_payload = build_audio_research_payload(brief, related_rows)
+        listen_text = audio_payload.get("text", "")
 
     return PlainTextResponse(
         listen_text,
