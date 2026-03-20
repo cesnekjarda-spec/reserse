@@ -17,12 +17,11 @@
 
 <section class="card">
   <div class="section-head"><div><div class="eyebrow">Čtení</div><h2>Text upravený pro poslech</h2></div></div>
-    <p class="lead">{{ brief.topic.name if brief.topic else '' }}</p>
+  <p class="lead">{{ brief.topic.name if brief.topic else '' }}</p>
   <p class="muted">
     Zdroj audio textu: <strong>{{ audio_payload.get('label', 'Neznámý') }}</strong>
     {% if audio_payload.get('context_article_count') %}· podklady: {{ audio_payload.get('context_article_count') }} čl.{% endif %}
     {% if audio_payload.get('reason_label') %}<br>{{ audio_payload.get('reason_label') }}{% endif %}
-    {% if audio_payload.get('debug_label') %}<br>{{ audio_payload.get('debug_label') }}{% endif %}
   </p>
   <div class="preline">{{ listen_text }}</div>
   <div class="hero-actions compact-actions">

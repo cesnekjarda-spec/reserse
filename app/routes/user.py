@@ -13,6 +13,7 @@ from app.models.subscription import UserArticleRead, UserTopicSubscription
 from app.models.topic import Topic
 from app.models.user import User
 from app.services.audio_service import (
+    build_audio_research_payload,
     build_audio_research_text,
     build_listening_script_from_text,
     build_listening_script_preview,
@@ -280,8 +281,7 @@ def brief_listen_script_txt(request: Request, brief_id: str):
             related_rows = db.scalars(
                 select(Article).where(Article.id.in_(brief.article_ids))
             ).all()
-        audio_payload = build_audio_research_payload(brief, related_rows)
-        listen_text = audio_payload.get("text", "")
+        listen_text = build_audio_research_text(brief, related_rows)
 
     return PlainTextResponse(
         listen_text,

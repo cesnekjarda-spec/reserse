@@ -99,12 +99,43 @@ def _build_structured_sections(topic: Topic, articles: list[Article]) -> dict:
     }
 
 
+def _topic_source_count(db: Session, topic_id: str) -> int:
+    return len(db.scalars(select(Source.id).where(Source.topic_id == topic_id, Source.is_active.is_(True))).all())
+
+
+def _build_empty_sections(topic: Topic, source_count: int) -> dict:
+    description = normalize_whitespace(topic.description or f"Téma {topic.name} je připravené k průběžnému sledování.")
+    return {
+        'summary': normalize_whitespace(
+            f"Téma {topic.name} zatím nemá dost nových článků pro plnohodnotný operativní briefing. {description}"
+        ),
+        'what_happened': normalize_whitespace(
+            f"V tuto chvíli nejsou u tématu {topic.name} v databázi dostupné čerstvé články, ze kterých by šlo složit plnohodnotné shrnutí."
+        ),
+        'why_it_matters': normalize_whitespace(
+            f"Téma zůstává aktivní a má připravené zdroje k monitoringu. Jakmile se objeví nové články, briefing se při dalším běhu automaticky přegeneruje."
+        ),
+        'watchlist': normalize_whitespace(
+            f"Dál sledovat nové články a aktualizace zdrojů pro téma {topic.name}. Aktivních zdrojů: {source_count}."
+        ),
+        'key_points': [
+            'Zatím chybí čerstvé články',
+            f'Aktivních zdrojů: {source_count}',
+            'Briefing se doplní automaticky po dalším syncu',
+        ],
+        'article_ids': [],
+        'source_count': source_count,
+        'article_count': 0,
+    }
+
 def generate_topic_brief(db: Session, topic: Topic) -> Brief | None:
     articles = _recent_topic_articles(db, topic.id)
-    if not articles:
-        return None
-    articles = _ensure_content(db, articles)
-    structured = _build_structured_sections(topic, articles)
+    source_count = _topic_source_count(db, topic.id)
+    if articles:
+        articles = _ensure_content(db, articles)
+        structured = _build_structured_sections(topic, articles)
+    else:
+        structured = _build_empty_sections(topic, source_count)
 
     brief = db.scalar(select(Brief).where(Brief.topic_id == topic.id))
     if not brief:

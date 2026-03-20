@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from app.config import settings
 from app.db import SessionLocal
 from app.services.sync_service import run_sync
+from app.services.brief_service import render_and_publish_all_briefs
 from app.services.auth_service import upsert_vip_user
 from app.services.pricing_service import get_user_monthly_topic_pricing
 
@@ -48,6 +49,26 @@ def _verify_vip_token(token: str, *, expected_audience: str) -> dict:
         raise HTTPException(status_code=401, detail="Token expired")
     return claims
 
+
+
+
+@router.post("/render-publish-briefs")
+def internal_render_publish_briefs(x_sync_secret: str | None = Header(default=None)):
+    if x_sync_secret != settings.sync_secret:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    with SessionLocal() as db:
+        result = render_and_publish_all_briefs(db)
+    return {"ok": True, **result}
+
+
+@router.post("/pipeline-hourly")
+def internal_pipeline_hourly(x_sync_secret: str | None = Header(default=None)):
+    if x_sync_secret != settings.sync_secret:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    with SessionLocal() as db:
+        sync_result = run_sync(db, triggered_by="internal-hourly")
+        brief_result = render_and_publish_all_briefs(db)
+    return {"ok": True, "sync": sync_result, "briefs": brief_result}
 
 @router.post("/sync-rss")
 def internal_sync_rss(x_sync_secret: str | None = Header(default=None)):

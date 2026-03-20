@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from io import BytesIO
-from typing import Iterable
 
 import httpx
 from google import genai
@@ -40,10 +39,8 @@ def _build_fallback_script(brief: Brief, related_articles: list[Article]) -> str
         f"Pro posluchače je důležité hlavně to, že {brief.why_it_matters}.",
         f"V dalších dnech stojí za sledování zejména toto: {brief.watchlist}.",
     ]
-
     if source_block:
         parts.append(f"Rešerše vychází mimo jiné z těchto podkladů: {source_block}")
-
     parts.append("Tímto základní poslechová rešerše končí.")
     return normalize_whitespace(" ".join(parts))
 
@@ -57,24 +54,6 @@ def build_listening_script_from_text(title: str, body_text: str, topic_name: str
     )
 
 
-def _collect_public_urls(related_articles: Iterable[Article]) -> list[str]:
-    urls: list[str] = []
-    seen: set[str] = set()
-    for article in related_articles:
-        if not article.url:
-            continue
-        url = article.url.strip()
-        if not url.startswith("http"):
-            continue
-        if url in seen:
-            continue
-        seen.add(url)
-        urls.append(url)
-        if len(urls) >= settings.audio_url_limit:
-            break
-    return urls
-
-
 def _article_source_excerpt(article: Article, max_chars: int = 1600) -> str:
     chunks: list[str] = []
     if article.title:
@@ -86,7 +65,7 @@ def _article_source_excerpt(article: Article, max_chars: int = 1600) -> str:
     return "\n".join(part for part in chunks if part).strip()
 
 
-def _collect_article_context_blocks(related_articles: list[Article], limit: int = 4) -> list[str]:
+def _collect_article_context_blocks(related_articles: list[Article], limit: int = 6) -> list[str]:
     blocks: list[str] = []
     for idx, article in enumerate(related_articles[:limit], start=1):
         excerpt = _article_source_excerpt(article)
@@ -101,98 +80,43 @@ def _collect_article_context_blocks(related_articles: list[Article], limit: int 
 
 def _gemini_reason_label(reason: str) -> str:
     return {
-        'no_api_key': 'Gemini API key není nastavený.',
-        'no_article_context': 'Pro tento briefing nejsou dostupné použitelné textové podklady článků.',
-        'gemini_empty': 'Gemini bylo k dispozici, ale pro tento brief nevrátilo použitelný text.',
-        'gemini_error': 'Gemini volání selhalo a aplikace přešla na fallback.',
-    }.get(reason, 'Audio výstup vznikl přes fallback.')
+        "no_api_key": "Gemini API key není nastavený.",
+        "no_article_context": "Pro tento briefing nejsou dostupné použitelné textové podklady článků.",
+        "gemini_empty": "Gemini bylo k dispozici, ale pro tento brief nevrátilo použitelný text.",
+        "gemini_error": "Gemini volání selhalo a aplikace přešla na fallback.",
+    }.get(reason, "Audio výstup vznikl přes fallback.")
 
 
 def _extract_text_from_genai_response(response) -> str:
-    direct = normalize_whitespace(getattr(response, 'text', '') or '')
+    direct = normalize_whitespace(getattr(response, "text", "") or "")
     if direct:
         return direct
 
     chunks: list[str] = []
-    for candidate in getattr(response, 'candidates', []) or []:
-        content = getattr(candidate, 'content', None)
-        for part in getattr(content, 'parts', []) or []:
-            part_text = normalize_whitespace(getattr(part, 'text', '') or '')
+    for candidate in getattr(response, "candidates", []) or []:
+        content = getattr(candidate, "content", None)
+        for part in getattr(content, "parts", []) or []:
+            part_text = normalize_whitespace(getattr(part, "text", "") or "")
             if part_text:
                 chunks.append(part_text)
-    return normalize_whitespace(' '.join(chunks))
-
-
-def _genai_debug_meta(response, *, prompt: str, blocks: list[str]) -> dict:
-    candidates = getattr(response, 'candidates', []) or []
-    finish_reasons: list[str] = []
-    parts_text_count = 0
-    parts_total_count = 0
-    for candidate in candidates:
-        finish = getattr(candidate, 'finish_reason', None)
-        if finish is not None:
-            finish_reasons.append(str(finish))
-        content = getattr(candidate, 'content', None)
-        for part in getattr(content, 'parts', []) or []:
-            parts_total_count += 1
-            if getattr(part, 'text', None):
-                parts_text_count += 1
-
-    usage = getattr(response, 'usage_metadata', None)
-    return {
-        'model': settings.gemini_model,
-        'prompt_chars': len(prompt),
-        'context_article_count': len(blocks),
-        'context_chars': sum(len(block) for block in blocks),
-        'candidate_count': len(candidates),
-        'finish_reasons': finish_reasons,
-        'parts_total_count': parts_total_count,
-        'parts_text_count': parts_text_count,
-        'response_text_len': len(getattr(response, 'text', '') or ''),
-        'prompt_token_count': getattr(usage, 'prompt_token_count', None),
-        'candidates_token_count': getattr(usage, 'candidates_token_count', None),
-        'total_token_count': getattr(usage, 'total_token_count', None),
-    }
-
-
-def _format_debug_label(meta: dict, error: str | None = None) -> str:
-    finish = ', '.join(meta.get('finish_reasons') or []) or 'neuvedeno'
-    bits = [
-        f"model {meta.get('model')}",
-        f"prompt {meta.get('prompt_chars', 0)} znaků",
-        f"podklady {meta.get('context_article_count', 0)} čl.",
-        f"kontext {meta.get('context_chars', 0)} znaků",
-        f"kandidáti {meta.get('candidate_count', 0)}",
-        f"finish {finish}",
-        f"parts s textem {meta.get('parts_text_count', 0)}/{meta.get('parts_total_count', 0)}",
-        f"response.text {meta.get('response_text_len', 0)} znaků",
-    ]
-    if meta.get('prompt_token_count') is not None:
-        bits.append(f"prompt tok. {meta.get('prompt_token_count')}")
-    if meta.get('candidates_token_count') is not None:
-        bits.append(f"output tok. {meta.get('candidates_token_count')}")
-    if meta.get('total_token_count') is not None:
-        bits.append(f"celkem tok. {meta.get('total_token_count')}")
-    if error:
-        bits.append(f"detail {error}")
-    return 'Gemini debug: ' + ' · '.join(bits)
+    return normalize_whitespace(" ".join(chunks))
 
 
 def _gemini_audio_script_from_article_text(brief: Brief, related_articles: list[Article]) -> dict:
     if not settings.gemini_api_key:
-        return {'ok': False, 'reason': 'no_api_key'}
+        return {"ok": False, "reason": "no_api_key"}
 
     blocks = _collect_article_context_blocks(related_articles)
     if not blocks:
-        return {'ok': False, 'reason': 'no_article_context'}
+        return {"ok": False, "reason": "no_article_context"}
 
-    topic_name = brief.topic.name if brief.topic else 'téma'
+    topic_name = brief.topic.name if brief.topic else "téma"
     context_blob = "\n\n".join(blocks)
     prompt = normalize_whitespace(
         f"Jsi zkušený český rešeršér a rozhlasový editor. "
         f"Na základě přiložených textových podkladů připrav souvislou operativní poslechovou rešerši v češtině. "
-        f"Nepoužívej odrážky, nezačínej titulkem ani seznamem bodů. Piš v plných větách a tak, aby výstup zněl přirozeně při předčítání. "
-        f"Neopakuj doslova stejné formulace. Text rozděl přirozeně takto: krátké uvedení tématu, hlavní vývoj, proč je důležitý, co sledovat dál. "
+        f"Nepiš odrážky, seznamy ani titulky. Piš v plných větách a tak, aby výstup zněl přirozeně při předčítání. "
+        f"Text rozděl přirozeně takto: krátké uvedení tématu, hlavní vývoj, proč je důležitý, co sledovat dál. "
         f"Buď věcný, střízlivý a shrň to do přibližně 170 až 260 slov. "
         f"Téma: {topic_name}. "
         f"Výchozí briefing: {brief.summary}. {brief.what_happened}. {brief.why_it_matters}. {brief.watchlist}. "
@@ -206,69 +130,52 @@ def _gemini_audio_script_from_article_text(brief: Brief, related_articles: list[
             contents=prompt,
         )
         text = _extract_text_from_genai_response(response)
-        meta = _genai_debug_meta(response, prompt=prompt, blocks=blocks)
         if not text:
-            return {'ok': False, 'reason': 'gemini_empty', 'debug_meta': meta}
+            return {"ok": False, "reason": "gemini_empty"}
         return {
-            'ok': True,
-            'text': text,
-            'context_article_count': len(blocks),
-            'debug_meta': meta,
+            "ok": True,
+            "text": text,
+            "context_article_count": len(blocks),
         }
-    except Exception as exc:
+    except Exception as exc:  # pragma: no cover - network/runtime variability
         return {
-            'ok': False,
-            'reason': 'gemini_error',
-            'error': shorten_text(str(exc), 240),
-            'debug_meta': {
-                'model': settings.gemini_model,
-                'prompt_chars': len(prompt),
-                'context_article_count': len(blocks),
-                'context_chars': sum(len(block) for block in blocks),
-                'candidate_count': 0,
-                'finish_reasons': [],
-                'parts_total_count': 0,
-                'parts_text_count': 0,
-                'response_text_len': 0,
-            },
+            "ok": False,
+            "reason": "gemini_error",
+            "error": shorten_text(str(exc), 240),
         }
+
 
 def build_audio_research_payload(brief: Brief, related_articles: list[Article]) -> dict:
     gemini_result = _gemini_audio_script_from_article_text(brief, related_articles)
-    if gemini_result.get('ok'):
-        debug_meta = gemini_result.get('debug_meta') or {}
+    if gemini_result.get("ok"):
         return {
-            'text': gemini_result['text'],
-            'source': 'gemini',
-            'label': 'Gemini',
-            'reason': None,
-            'reason_label': 'Gemini použilo interní textové podklady článků.',
-            'context_article_count': gemini_result.get('context_article_count', 0),
-            'debug_label': _format_debug_label(debug_meta),
-            'debug_meta': debug_meta,
+            "text": gemini_result["text"],
+            "source": "gemini",
+            "label": "Gemini",
+            "reason": None,
+            "reason_label": "Gemini použilo interní textové podklady článků.",
+            "context_article_count": gemini_result.get("context_article_count", 0),
         }
 
-    reason = gemini_result.get('reason') or 'fallback'
-    error = gemini_result.get('error')
+    reason = gemini_result.get("reason") or "fallback"
+    error = gemini_result.get("error")
     reason_label = _gemini_reason_label(reason)
-    debug_meta = gemini_result.get('debug_meta') or {}
     if error:
         reason_label = f"{reason_label} Detail: {error}"
 
     return {
-        'text': _build_fallback_script(brief, related_articles),
-        'source': 'fallback',
-        'label': 'Fallback',
-        'reason': reason,
-        'reason_label': reason_label,
-        'context_article_count': len(_collect_article_context_blocks(related_articles)),
-        'debug_label': _format_debug_label(debug_meta, error=error),
-        'debug_meta': debug_meta,
+        "text": _build_fallback_script(brief, related_articles),
+        "source": "fallback",
+        "label": "Fallback",
+        "reason": reason,
+        "reason_label": reason_label,
+        "context_article_count": len(_collect_article_context_blocks(related_articles)),
     }
+
 
 def build_audio_research_text(brief: Brief, related_articles: list[Article]) -> str:
     payload = build_audio_research_payload(brief, related_articles)
-    return payload.get('text', '')
+    return payload.get("text", "")
 
 
 def synthesize_mp3_bytes(text: str) -> bytes:

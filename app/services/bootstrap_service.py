@@ -133,6 +133,51 @@ def _direct_sources_for_topic(topic_name: str) -> list[dict]:
     return shared
 
 
+def _default_topic_queries(topic_name: str, description: str | None = None) -> list[str]:
+    base = topic_name.strip()
+    generic = [
+        base,
+        f"{base} Česko",
+        f"{base} Evropa",
+        f"{base} trendy",
+        f"{base} vývoj",
+        f"{base} analýza",
+        f"{base} firmy",
+        f"{base} trh",
+        f"{base} inovace",
+        f"{base} regulace",
+    ]
+    if description:
+        desc = description.strip().rstrip('.')
+        generic.append(f"{base} {desc}")
+    ordered: list[str] = []
+    seen: set[str] = set()
+    for query in generic:
+        q = query.strip()
+        if not q or q.lower() in seen:
+            continue
+        seen.add(q.lower())
+        ordered.append(q)
+    return ordered
+
+
+def _top_up_google_news_sources(topic_name: str, description: str | None, existing_source_items: list[dict], minimum_sources: int = 10) -> list[dict]:
+    used_names = {str(item.get('name') or '').strip().lower() for item in existing_source_items}
+    used_rss = {str(item.get('rss_url') or '').strip().lower() for item in existing_source_items}
+    additions: list[dict] = []
+    for idx, query in enumerate(_default_topic_queries(topic_name, description), start=1):
+        source = _google_news_source(f"Google News – {topic_name} · doplněk {idx}", query)
+        key_name = source['name'].strip().lower()
+        key_rss = source['rss_url'].strip().lower()
+        if key_name in used_names or key_rss in used_rss:
+            continue
+        additions.append(source)
+        used_names.add(key_name)
+        used_rss.add(key_rss)
+        if len(existing_source_items) + len(additions) >= minimum_sources:
+            break
+    return additions
+
 def ensure_seed_topics_and_sources(db: Session) -> None:
     for topic_item in SEED_TOPICS:
         slug = slugify(topic_item["name"])
@@ -158,6 +203,14 @@ def ensure_seed_topics_and_sources(db: Session) -> None:
             db.commit()
 
         source_items = list(topic_item.get("sources", [])) + _direct_sources_for_topic(topic_item["name"])
+        source_items.extend(
+            _top_up_google_news_sources(
+                topic_item["name"],
+                topic_item.get("description"),
+                source_items,
+                minimum_sources=10,
+            )
+        )
         for source_item in source_items:
             existing = db.scalar(
                 select(Source).where(Source.topic_id == topic.id, Source.rss_url == source_item["rss_url"])

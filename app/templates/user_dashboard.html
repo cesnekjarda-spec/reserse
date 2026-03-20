@@ -132,12 +132,6 @@
           {% if brief_audio_payload.get(brief.id, {}).get('reason_label') %}
             <span class="muted">· {{ brief_audio_payload.get(brief.id, {}).get('reason_label') }}</span>
           {% endif %}
-          {% if brief_audio_payload.get(brief.id, {}).get('debug_label') %}
-            <details class="external-details" style="flex-basis:100%; margin-top:6px;">
-              <summary>Gemini debug</summary>
-              <div class="muted">{{ brief_audio_payload.get(brief.id, {}).get('debug_label') }}</div>
-            </details>
-          {% endif %}
         </div>
         <a class="btn btn-ghost" href="/briefs/{{ brief.id }}/audio.mp3" target="_blank" rel="noopener">Audio rešerše MP3</a>
       </div>
