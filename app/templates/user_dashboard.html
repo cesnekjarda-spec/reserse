@@ -115,14 +115,7 @@
         >
           Přečíst briefing nahlas
         </button>
-        <button
-          class="btn btn-ghost js-read-aloud"
-          type="button"
-          data-default-label="Přečíst poslechovou rešerši"
-          data-speech-text="{{ brief_audio_payload.get(brief.id, {}).get('text', '')|replace('\n', ' ')|e }}"
-        >
-          Přečíst poslechovou rešerši
-        </button>
+        <a class="btn btn-ghost" href="/briefs/{{ brief.id }}/listen">Přečíst poslechovou rešerši</a>
         <a class="btn btn-ghost" href="/briefs/{{ brief.id }}/listen">Poslechový model</a>
         <div class="mini-meta" style="flex-basis:100%;">
           Zdroj audio textu: <strong>{{ brief_audio_payload.get(brief.id, {}).get('label', 'Neznámý') }}</strong>

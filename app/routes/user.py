@@ -13,7 +13,6 @@ from app.models.subscription import UserArticleRead, UserTopicSubscription
 from app.models.topic import Topic
 from app.models.user import User
 from app.services.audio_service import (
-    build_audio_research_payload,
     build_audio_research_text,
     build_listening_script_from_text,
     build_listening_script_preview,
@@ -124,7 +123,14 @@ def dashboard(request: Request):
             for brief in briefs
         }
         brief_audio_payload = {
-            brief.id: build_audio_research_payload(brief, brief_related.get(brief.id, []))
+            brief.id: {
+                "text": "",
+                "source": "deferred",
+                "label": "Na vyžádání",
+                "reason": "deferred_dashboard_generation",
+                "reason_label": "Poslechová rešerše se připraví až po otevření Poslechového modelu nebo MP3.",
+                "context_article_count": len(brief_related.get(brief.id, [])),
+            }
             for brief in briefs
         }
 
