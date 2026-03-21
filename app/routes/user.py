@@ -13,6 +13,7 @@ from app.models.subscription import UserArticleRead, UserTopicSubscription
 from app.models.topic import Topic
 from app.models.user import User
 from app.services.audio_service import (
+    build_audio_research_payload,
     build_audio_research_text,
     build_listening_script_from_text,
     build_listening_script_preview,
