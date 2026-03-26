@@ -1,0 +1,22 @@
+name: Sync RSS
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/15 * * * *"
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check secrets
+        run: |
+          test -n "${{ secrets.SYNC_URL }}" || (echo "SYNC_URL is empty" && exit 1)
+          test -n "${{ secrets.SYNC_SECRET }}" || (echo "SYNC_SECRET is empty" && exit 1)
+
+      - name: Call sync endpoint
+        run: |
+          curl -f -i -sS -X POST "${{ secrets.SYNC_URL }}" \
+            -H "X-Sync-Secret: ${{ secrets.SYNC_SECRET }}" \
+            -H "Content-Type: application/json" \
+            -d '{}'
