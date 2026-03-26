@@ -1,0 +1,22 @@
+name: Pipeline Hourly
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "5 * * * *"
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check secrets
+        run: |
+          test -n "${{ secrets.PIPELINE_URL }}" || (echo "PIPELINE_URL is empty" && exit 1)
+          test -n "${{ secrets.PIPELINE_SECRET }}" || (echo "PIPELINE_SECRET is empty" && exit 1)
+
+      - name: Call hourly pipeline endpoint
+        run: |
+          curl -f -i -sS -X POST "${{ secrets.PIPELINE_URL }}" \
+            -H "X-Sync-Secret: ${{ secrets.PIPELINE_SECRET }}" \
+            -H "Content-Type: application/json" \
+            -d '{}'
