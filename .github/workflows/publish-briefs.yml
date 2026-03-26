@@ -1,0 +1,22 @@
+name: Publish Briefs
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 7,13,19 * * *"
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check secrets
+        run: |
+          test -n "${{ secrets.BRIEF_URL }}" || (echo "BRIEF_URL is empty" && exit 1)
+          test -n "${{ secrets.BRIEF_SECRET }}" || (echo "BRIEF_SECRET is empty" && exit 1)
+
+      - name: Call briefs endpoint
+        run: |
+          curl -f -i -sS -X POST "${{ secrets.BRIEF_URL }}" \
+            -H "X-Sync-Secret: ${{ secrets.BRIEF_SECRET }}" \
+            -H "Content-Type: application/json" \
+            -d '{}'
