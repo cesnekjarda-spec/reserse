@@ -484,8 +484,7 @@ def update_tts_interface(
 
         except Exception as exc:
             db.rollback()
-            msg = str(exc).replace("
-", " ").replace("", " ")[:180]
+            msg = str(exc).replace("\n", " ").replace("\r", " ")[:180]
             return PlainTextResponse(f"TTS save error: {msg}", status_code=500)
 
     return RedirectResponse(url="/dashboard", status_code=303)
