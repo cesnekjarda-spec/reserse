@@ -39,6 +39,7 @@ from app.services.pricing_service import get_user_monthly_topic_pricing
 from app.services.tts_connection_service import (
     DEFAULT_MODEL_ID,
     DEFAULT_PROVIDER_CODE,
+    clear_api_key,
     decrypt_api_key,
     describe_connection,
     get_or_create_user_tts_connection,
@@ -455,28 +456,38 @@ def update_tts_interface(
         return RedirectResponse(url="/login", status_code=303)
 
     with SessionLocal() as db:
-        fresh_user = db.get(User, current_user.id)
-        if fresh_user:
-            if clear_stored_key:
-                connection = get_or_create_user_tts_connection(db, fresh_user)
-                clear_api_key(connection)
-                db.add(connection)
-                db.commit()
-            _, warning = save_user_tts_connection(
-                db,
-                fresh_user,
-                provider_code=DEFAULT_PROVIDER_CODE,
-                display_name=display_name,
-                voice_id=voice_id,
-                model_id=model_id,
-                api_key=api_key,
-                note=note,
-                is_enabled=bool(is_enabled),
-            )
-            redirect_url = "/dashboard?tts_saved=1"
-            if warning:
-                redirect_url += "&tts_warning=1"
-            return RedirectResponse(url=redirect_url, status_code=303)
+        try:
+            fresh_user = db.get(User, current_user.id)
+            if fresh_user:
+                if clear_stored_key:
+                    connection = get_or_create_user_tts_connection(db, fresh_user)
+                    clear_api_key(connection)
+                    db.add(connection)
+                    db.commit()
+
+                _, warning = save_user_tts_connection(
+                    db,
+                    fresh_user,
+                    provider_code=DEFAULT_PROVIDER_CODE,
+                    display_name=display_name,
+                    voice_id=voice_id,
+                    model_id=model_id,
+                    api_key=api_key,
+                    note=note,
+                    is_enabled=bool(is_enabled),
+                )
+
+                redirect_url = "/dashboard?tts_saved=1"
+                if warning:
+                    redirect_url += "&tts_warning=1"
+                return RedirectResponse(url=redirect_url, status_code=303)
+
+        except Exception as exc:
+            db.rollback()
+            msg = str(exc).replace("
+", " ").replace("", " ")[:180]
+            return PlainTextResponse(f"TTS save error: {msg}", status_code=500)
+
     return RedirectResponse(url="/dashboard", status_code=303)
 
 

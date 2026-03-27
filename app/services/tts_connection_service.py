@@ -166,6 +166,11 @@ def save_user_tts_connection(
             connection.api_key_last4 = None
 
     db.add(connection)
-    db.commit()
-    db.refresh(connection)
+    try:
+        db.commit()
+        db.refresh(connection)
+    except Exception:
+        db.rollback()
+        raise
+
     return connection, warning
